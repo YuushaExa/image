@@ -42,10 +42,16 @@ function handleDrop(event) {
 
 function handlePaste(event) {
     const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Add more extensions as needed
+    
     for (const item of items) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-            const file = item.getAsFile();
-            if (file) {
+        const file = item.getAsFile();
+        
+        if (file) {
+            const fileType = file.type.toLowerCase();
+            const fileExtension = fileType.split('/').pop();
+            
+            if (imageExtensions.includes(fileExtension)) {
                 loadImage(file);
             }
         }
