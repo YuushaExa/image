@@ -16,18 +16,13 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-#drop-area {
+#stage-container {
     margin: 20px 0;
-    padding: 20px;
     border: 2px dashed #ccc;
     border-radius: 10px;
-    cursor: pointer;
+    width: 600px;
+    height: 400px;
     position: relative;
-}
-
-img {
-    max-width: 100%;
-    display: none;
 }
 
 .controls {
@@ -72,25 +67,4 @@ input[type="range"] {
     right: 0;
     font-size: 14px;
     color: #333;
-}
-
-.range-ticks {
-    position: absolute;
-    width: 100%;
-    top: 25px;
-    height: 10px;
-}
-
-.tick {
-    position: absolute;
-    width: 1px;
-    height: 10px;
-    background: #333;
-}
-
-.crop-area {
-    position: absolute;
-    border: 2px dashed #000;
-    cursor: move;
-    display: none;
 }
