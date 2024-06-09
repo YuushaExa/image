@@ -78,6 +78,8 @@ function loadImage(src) {
 }
 
 function updateFilters() {
+    if (!imageNode) return;
+
     const brightness = parseInt(brightnessInput.value);
     const contrast = parseInt(contrastInput.value);
     const saturation = parseInt(saturationInput.value);
@@ -92,7 +94,7 @@ function updateFilters() {
     imageNode.brightness(brightness / 100);
     imageNode.contrast(contrast / 100);
     imageNode.saturation(saturation / 100);
-    layer.draw();
+    layer.batchDraw();
 
     updateLabels();
 }
@@ -179,9 +181,11 @@ function applyCrop(cropRect) {
 }
 
 function saveState() {
-    undoStack.push(layer.toJSON());
-    redoStack = [];
-    updateButtons();
+    if (layer) {
+        undoStack.push(layer.toJSON());
+        redoStack = [];
+        updateButtons();
+    }
 }
 
 function undo() {
@@ -192,7 +196,6 @@ function undo() {
         Konva.Node.create(state, layer);
         layer.draw();
         imageNode = layer.findOne('Image');
-        updateFilters();
         updateButtons();
     }
 }
@@ -205,7 +208,6 @@ function redo() {
         Konva.Node.create(state, layer);
         layer.draw();
         imageNode = layer.findOne('Image');
-        updateFilters();
         updateButtons();
     }
 }
