@@ -1,49 +1,34 @@
 const uploadInput = document.getElementById('upload');
-const dropArea = document.getElementById('drop-area');
-const img = document.getElementById('canvas');
 const imageUrlInput = document.getElementById('image-url');
 const loadUrlButton = document.getElementById('load-url');
 const cropButton = document.getElementById('crop-btn');
-const canvas = document.getElementById('canvas');
 
-let cropArea = null;
-let isCropping = false;
-let startX, startY;
+const brightnessInput = document.getElementById('brightness');
+const contrastInput = document.getElementById('contrast');
+const saturationInput = document.getElementById('saturation');
+
+const stage = new Konva.Stage({
+    container: 'stage-container',
+    width: 600,
+    height: 400,
+});
+
+const layer = new Konva.Layer();
+stage.add(layer);
+
+let imageNode;
+let imageObj = new Image();
 
 uploadInput.addEventListener('change', handleFileSelect);
-dropArea.addEventListener('dragover', handleDragOver);
-dropArea.addEventListener('drop', handleDrop);
-dropArea.addEventListener('click', () => uploadInput.click());
 loadUrlButton.addEventListener('click', handleImageUrl);
 cropButton.addEventListener('click', initiateCrop);
 
-const controls = ['brightness', 'contrast', 'saturation'];
-controls.forEach(control => {
-    const input = document.getElementById(control);
-    input.addEventListener('input', () => {
-        applyFilters();
-        updateLabel(control);
-    });
-});
+brightnessInput.addEventListener('input', updateFilters);
+contrastInput.addEventListener('input', updateFilters);
+saturationInput.addEventListener('input', updateFilters);
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
-    if (file) {
-        loadImage(URL.createObjectURL(file));
-    }
-}
-
-function handleDragOver(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    dropArea.classList.add('dragover');
-}
-
-function handleDrop(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    dropArea.classList.remove('dragover');
-    const file = event.dataTransfer.files[0];
     if (file) {
         loadImage(URL.createObjectURL(file));
     }
@@ -57,112 +42,111 @@ function handleImageUrl() {
 }
 
 function loadImage(src) {
-    img.src = src;
-    img.onload = () => {
-        img.style.display = 'block';
-        if (cropArea) {
-            cropArea.remove();
-            cropArea = null;
+    imageObj.src = src;
+    imageObj.onload = () => {
+        if (imageNode) {
+            imageNode.destroy();
         }
+
+        imageNode = new Konva.Image({
+            image: imageObj,
+            x: 0,
+            y: 0,
+            draggable: true,
+        });
+
+        layer.add(imageNode);
+        layer.draw();
     };
 }
 
-function applyFilters() {
-    const brightness = document.getElementById('brightness').value;
-    const contrast = document.getElementById('contrast').value;
-    const saturation = document.getElementById('saturation').value;
+function updateFilters() {
+    const brightness = parseInt(brightnessInput.value);
+    const contrast = parseInt(contrastInput.value);
+    const saturation = parseInt(saturationInput.value);
 
-    img.style.filter = `
-        brightness(${parseInt(brightness) + 100}%)
-        contrast(${parseInt(contrast) + 100}%)
-        saturate(${parseInt(saturation) + 100}%)
-    `;
-}
+    imageNode.cache();
+    imageNode.filters([
+        Konva.Filters.Brighten,
+        Konva.Filters.Contrast,
+        Konva.Filters.HSL,
+    ]);
 
-function updateLabel(control) {
-    const value = document.getElementById(control).value;
-    document.getElementById(`${control}-label`).textContent = `${value}%`;
+    imageNode.brightness(brightness / 100);
+    imageNode.contrast(contrast / 100);
+    imageNode.saturation(saturation / 100);
+    layer.draw();
 }
 
 function initiateCrop() {
-    if (cropArea) {
-        cropArea.remove();
-        cropArea = null;
-    }
+    if (!imageNode) return;
 
-    cropArea = document.createElement('div');
-    cropArea.classList.add('crop-area');
-    dropArea.appendChild(cropArea);
+    const cropRect = new Konva.Rect({
+        x: 50,
+        y: 50,
+        width: 200,
+        height: 100,
+        stroke: 'black',
+        dash: [10, 5],
+        draggable: true,
+        dragBoundFunc: function(pos) {
+            const newX = Math.max(0, Math.min(pos.x, stage.width() - cropRect.width()));
+            const newY = Math.max(0, Math.min(pos.y, stage.height() - cropRect.height()));
+            return {
+                x: newX,
+                y: newY,
+            };
+        },
+    });
 
-    isCropping = true;
+    layer.add(cropRect);
+    layer.draw();
 
-    dropArea.addEventListener('mousedown', startCrop);
-    dropArea.addEventListener('mousemove', moveCrop);
-    dropArea.addEventListener('mouseup', endCrop);
+    cropButton.textContent = 'Apply Crop';
+    cropButton.removeEventListener('click', initiateCrop);
+    cropButton.addEventListener('click', () => applyCrop(cropRect));
 }
 
-function startCrop(event) {
-    if (!isCropping) return;
+function applyCrop(cropRect) {
+    const cropX = cropRect.x();
+    const cropY = cropRect.y();
+    const cropWidth = cropRect.width();
+    const cropHeight = cropRect.height();
 
-    startX = event.offsetX;
-    startY = event.offsetY;
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = cropWidth;
+    croppedCanvas.height = cropHeight;
 
-    cropArea.style.left = `${startX}px`;
-    cropArea.style.top = `${startY}px`;
-    cropArea.style.width = '0';
-    cropArea.style.height = '0';
-    cropArea.style.display = 'block';
-}
+    const croppedCtx = croppedCanvas.getContext('2d');
+    croppedCtx.drawImage(
+        imageObj,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        cropWidth,
+        cropHeight
+    );
 
-function moveCrop(event) {
-    if (!isCropping) return;
+    imageObj.src = croppedCanvas.toDataURL();
+    imageObj.onload = () => {
+        imageNode.image(imageObj);
+        imageNode.size({
+            width: cropWidth,
+            height: cropHeight,
+        });
+        imageNode.position({
+            x: 0,
+            y: 0,
+        });
 
-    const currentX = event.offsetX;
-    const currentY = event.offsetY;
+        cropRect.destroy();
+        layer.draw();
 
-    const width = currentX - startX;
-    const height = currentY - startY;
-
-    cropArea.style.width = `${Math.abs(width)}px`;
-    cropArea.style.height = `${Math.abs(height)}px`;
-
-    if (width < 0) {
-        cropArea.style.left = `${currentX}px`;
-    }
-
-    if (height < 0) {
-        cropArea.style.top = `${currentY}px`;
-    }
-}
-
-function endCrop(event) {
-    if (!isCropping) return;
-
-    isCropping = false;
-
-    const cropRect = cropArea.getBoundingClientRect();
-    const imgRect = img.getBoundingClientRect();
-
-    const cropX = cropRect.left - imgRect.left;
-    const cropY = cropRect.top - imgRect.top;
-    const cropWidth = cropRect.width;
-    const cropHeight = cropRect.height;
-
-    cropImage(cropX, cropY, cropWidth, cropHeight);
-    cropArea.remove();
-    cropArea = null;
-}
-
-function cropImage(x, y, width, height) {
-    const context = canvas.getContext('2d');
-    const imageObj = new Image();
-
-    imageObj.onload = function() {
-        canvas.width = width;
-        canvas.height = height;
-
-        context.drawImage(imageObj, x, y, width, height, 0, 0, canvas.width, canvas.height);
-        img.src = canvas.toDataURL();
+        cropButton.textContent = 'Crop';
+        cropButton.removeEventListener('click', applyCrop);
+        cropButton.addEventListener('click', initiateCrop);
     };
-    imageObj.src = img.src;
 }
