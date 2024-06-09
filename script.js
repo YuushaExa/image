@@ -1,6 +1,6 @@
 const uploadInput = document.getElementById('upload');
 const dropArea = document.getElementById('drop-area');
-const img = document.getElementById('image');
+const img = document.getElementById('canvas');
 const imageUrlInput = document.getElementById('image-url');
 const loadUrlButton = document.getElementById('load-url');
 const cropButton = document.getElementById('crop-btn');
