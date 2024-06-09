@@ -39,7 +39,7 @@ function handleDrop(event) {
 function handlePaste(event) {
     const items = (event.clipboardData || event.originalEvent.clipboardData).items;
     for (const item of items) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
+        if (item.kind === 'file' && item.type.startsWith('/')) {
             const file = item.getAsFile();
             if (file) {
                 loadImage(file);
