@@ -39,6 +39,22 @@ label {
     margin-top: 10px;
 }
 
+input[type="text"] {
+    margin-bottom: 10px;
+    padding: 5px;
+    width: 80%;
+}
+
+button {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
 .slider-container {
     position: relative;
     width: 300px;
@@ -69,4 +85,11 @@ input[type="range"] {
     width: 1px;
     height: 10px;
     background: #333;
+}
+
+.crop-area {
+    position: absolute;
+    border: 2px dashed #000;
+    cursor: move;
+    display: none;
 }
