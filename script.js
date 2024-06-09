@@ -10,7 +10,11 @@ document.addEventListener('paste', handlePaste);
 
 const controls = ['brightness', 'contrast', 'saturation'];
 controls.forEach(control => {
-    document.getElementById(control).addEventListener('input', applyFilters);
+    const input = document.getElementById(control);
+    input.addEventListener('input', () => {
+        applyFilters();
+        updateLabel(control);
+    });
 });
 
 function handleFileSelect(event) {
@@ -39,7 +43,7 @@ function handleDrop(event) {
 function handlePaste(event) {
     const items = (event.clipboardData || event.originalEvent.clipboardData).items;
     for (const item of items) {
-        if (item.kind === 'file' && item.type.startsWith('/')) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
             const file = item.getAsFile();
             if (file) {
                 loadImage(file);
@@ -67,4 +71,9 @@ function applyFilters() {
         contrast(${parseInt(contrast) + 100}%)
         saturate(${parseInt(saturation) + 100}%)
     `;
+}
+
+function updateLabel(control) {
+    const value = document.getElementById(control).value;
+    document.getElementById(`${control}-label`).textContent = `${value}%`;
 }
