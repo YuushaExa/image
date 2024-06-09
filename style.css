@@ -39,6 +39,34 @@ label {
     margin-top: 10px;
 }
 
-input[type="range"] {
+.slider-container {
+    position: relative;
     width: 300px;
+    margin-top: 10px;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+.range-label {
+    position: absolute;
+    top: -25px;
+    right: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.range-ticks {
+    position: absolute;
+    width: 100%;
+    top: 25px;
+    height: 10px;
+}
+
+.tick {
+    position: absolute;
+    width: 1px;
+    height: 10px;
+    background: #333;
 }
