@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Lightroom Copy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Web Lightroom Copy</h1>
+        <input type="file" id="upload" accept="image/*">
+        <div id="drop-area">
+            <p>Drag & Drop an image here or click to upload</p>
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="controls">
+            <label for="brightness">Brightness</label>
+            <input type="range" id="brightness" min="-100" max="100" value="0">
+
+            <label for="contrast">Contrast</label>
+            <input type="range" id="contrast" min="-100" max="100" value="0">
+
+            <label for="saturation">Saturation</label>
+            <input type="range" id="saturation" min="-100" max="100" value="0">
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
