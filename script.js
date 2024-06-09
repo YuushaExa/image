@@ -2,6 +2,8 @@ const uploadInput = document.getElementById('upload');
 const imageUrlInput = document.getElementById('image-url');
 const loadUrlButton = document.getElementById('load-url');
 const cropButton = document.getElementById('crop-btn');
+const undoButton = document.getElementById('undo-btn');
+const redoButton = document.getElementById('redo-btn');
 
 const brightnessInput = document.getElementById('brightness');
 const contrastInput = document.getElementById('contrast');
@@ -19,13 +21,27 @@ stage.add(layer);
 let imageNode;
 let imageObj = new Image();
 
+let undoStack = [];
+let redoStack = [];
+
 uploadInput.addEventListener('change', handleFileSelect);
 loadUrlButton.addEventListener('click', handleImageUrl);
 cropButton.addEventListener('click', initiateCrop);
+undoButton.addEventListener('click', undo);
+redoButton.addEventListener('click', redo);
 
-brightnessInput.addEventListener('input', updateFilters);
-contrastInput.addEventListener('input', updateFilters);
-saturationInput.addEventListener('input', updateFilters);
+brightnessInput.addEventListener('input', () => {
+    saveState();
+    updateFilters();
+});
+contrastInput.addEventListener('input', () => {
+    saveState();
+    updateFilters();
+});
+saturationInput.addEventListener('input', () => {
+    saveState();
+    updateFilters();
+});
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -57,6 +73,7 @@ function loadImage(src) {
 
         layer.add(imageNode);
         layer.draw();
+        saveState();
     };
 }
 
@@ -76,6 +93,14 @@ function updateFilters() {
     imageNode.contrast(contrast / 100);
     imageNode.saturation(saturation / 100);
     layer.draw();
+
+    updateLabels();
+}
+
+function updateLabels() {
+    document.getElementById('brightness-label').textContent = `${brightnessInput.value}%`;
+    document.getElementById('contrast-label').textContent = `${contrastInput.value}%`;
+    document.getElementById('saturation-label').textContent = `${saturationInput.value}%`;
 }
 
 function initiateCrop() {
@@ -148,5 +173,44 @@ function applyCrop(cropRect) {
         cropButton.textContent = 'Crop';
         cropButton.removeEventListener('click', applyCrop);
         cropButton.addEventListener('click', initiateCrop);
+
+        saveState();
     };
+}
+
+function saveState() {
+    undoStack.push(layer.toJSON());
+    redoStack = [];
+    updateButtons();
+}
+
+function undo() {
+    if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        const state = undoStack[undoStack.length - 1];
+        layer.destroyChildren();
+        Konva.Node.create(state, layer);
+        layer.draw();
+        imageNode = layer.findOne('Image');
+        updateFilters();
+        updateButtons();
+    }
+}
+
+function redo() {
+    if (redoStack.length > 0) {
+        const state = redoStack.pop();
+        undoStack.push(state);
+        layer.destroyChildren();
+        Konva.Node.create(state, layer);
+        layer.draw();
+        imageNode = layer.findOne('Image');
+        updateFilters();
+        updateButtons();
+    }
+}
+
+function updateButtons() {
+    undoButton.disabled = undoStack.length <= 1;
+    redoButton.disabled = redoStack.length === 0;
 }
