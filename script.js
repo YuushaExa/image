@@ -5,15 +5,14 @@ const imageUrlInput = document.getElementById('image-url');
 const loadUrlButton = document.getElementById('load-url');
 const cropButton = document.getElementById('crop-btn');
 
-let cropArea = null;
-let startX, startY, isDragging = false;
+let cropper;
 
 uploadInput.addEventListener('change', handleFileSelect);
 dropArea.addEventListener('dragover', handleDragOver);
 dropArea.addEventListener('drop', handleDrop);
 dropArea.addEventListener('click', () => uploadInput.click());
 loadUrlButton.addEventListener('click', handleImageUrl);
-cropButton.addEventListener('click', initiateCrop);
+cropButton.addEventListener('click', cropImage);
 
 const controls = ['brightness', 'contrast', 'saturation'];
 controls.forEach(control => {
@@ -58,6 +57,13 @@ function loadImage(src) {
     img.src = src;
     img.onload = () => {
         img.style.display = 'block';
+        if (cropper) {
+            cropper.destroy();
+        }
+        cropper = new Cropper(img, {
+            aspectRatio: NaN,
+            viewMode: 1
+        });
     };
 }
 
@@ -78,79 +84,11 @@ function updateLabel(control) {
     document.getElementById(`${control}-label`).textContent = `${value}%`;
 }
 
-function initiateCrop() {
-    if (cropArea) {
-        cropArea.remove();
+function cropImage() {
+    if (cropper) {
+        const canvas = cropper.getCroppedCanvas();
+        img.src = canvas.toDataURL();
+        cropper.destroy();
+        cropper = null;
     }
-
-    cropArea = document.createElement('div');
-    cropArea.classList.add('crop-area');
-    dropArea.appendChild(cropArea);
-
-    dropArea.addEventListener('mousedown', startCrop);
-    dropArea.addEventListener('mousemove', moveCrop);
-    dropArea.addEventListener('mouseup', endCrop);
-}
-
-function startCrop(event) {
-    if (!cropArea) return;
-
-    startX = event.offsetX;
-    startY = event.offsetY;
-    isDragging = true;
-
-    cropArea.style.left = `${startX}px`;
-    cropArea.style.top = `${startY}px`;
-    cropArea.style.width = '0';
-    cropArea.style.height = '0';
-    cropArea.style.display = 'block';
-}
-
-function moveCrop(event) {
-    if (!isDragging || !cropArea) return;
-
-    const currentX = event.offsetX;
-    const currentY = event.offsetY;
-
-    const width = currentX - startX;
-    const height = currentY - startY;
-
-    cropArea.style.width = `${width}px`;
-    cropArea.style.height = `${height}px`;
-}
-
-function endCrop() {
-    if (!cropArea) return;
-
-    isDragging = false;
-
-    const cropRect = cropArea.getBoundingClientRect();
-    const imgRect = img.getBoundingClientRect();
-
-    const cropX = cropRect.left - imgRect.left;
-    const cropY = cropRect.top - imgRect.top;
-    const cropWidth = cropRect.width;
-    const cropHeight = cropRect.height;
-
-    cropImage(cropX, cropY, cropWidth, cropHeight);
-    cropArea.remove();
-    cropArea = null;
-}
-
-function cropImage(x, y, width, height) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = width;
-    canvas.height = height;
-
-    const imgWidth = img.naturalWidth;
-    const imgHeight = img.naturalHeight;
-    const imgX = (imgWidth / img.clientWidth) * x;
-    const imgY = (imgHeight / img.clientHeight) * y;
-    const imgWidthScaled = (imgWidth / img.clientWidth) * width;
-    const imgHeightScaled = (imgHeight / img.clientHeight) * height;
-
-    ctx.drawImage(img, imgX, imgY, imgWidthScaled, imgHeightScaled, 0, 0, width, height);
-    img.src = canvas.toDataURL();
 }
