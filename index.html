@@ -3,84 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Lightroom Copy</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js"></script>
+    <title>Canvas Image Editor</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <h1>Web Lightroom Copy</h1>
-            <input type="file" id="upload" accept="image/*">
-            <div id="drop-area">
-                <p>Drag & Drop an image here or click to upload</p>
-            </div>
-            <label for="image-url">Image URL</label>
-            <input type="text" id="image-url" placeholder="Enter image URL">
-            <button id="load-url">Submit</button>
-
-            <label for="brightness">Brightness</label>
-            <div class="slider-container">
-                <input type="range" id="brightness" min="-100" max="100" value="0">
-                <div class="range-label" id="brightness-label">0%</div>
-                <div class="range-ticks">
-                    <div class="tick" style="left: 0;"></div>
-                    <div class="tick" style="left: 50%;"></div>
-                    <div class="tick" style="left: 100%;"></div>
-                </div>
-            </div>
-
-            <label for="contrast">Contrast</label>
-            <div class="slider-container">
-                <input type="range" id="contrast" min="-100" max="100" value="0">
-                <div class="range-label" id="contrast-label">0%</div>
-                <div class="range-ticks">
-                    <div class="tick" style="left: 0;"></div>
-                    <div class="tick" style="left: 50%;"></div>
-                    <div class="tick" style="left: 100%;"></div>
-                </div>
-            </div>
-
-            <label for="saturation">Saturation</label>
-            <div class="slider-container">
-                <input type="range" id="saturation" min="-100" max="100" value="0">
-                <div class="range-label" id="saturation-label">0%</div>
-                <div class="range-ticks">
-                    <div class="tick" style="left: 0;"></div>
-                    <div class="tick" style="left: 50%;"></div>
-                    <div class="tick" style="left: 100%;"></div>
-                </div>
-            </div>
-
-            <label for="image-width">Image Width</label>
-            <input type="number" id="image-width" placeholder="Image Width">
-
-            <label for="image-height">Image Height</label>
-            <input type="number" id="image-height" placeholder="Image Height">
-
-            <label for="canvas-width">Canvas Width</label>
-            <input type="number" id="canvas-width" placeholder="Canvas Width">
-
-            <label for="canvas-height">Canvas Height</label>
-            <input type="number" id="canvas-height" placeholder="Canvas Height">
-
-            <button id="crop-btn">Crop</button>
-
-            <label for="unit-select">Units</label>
-<select id="unit-select">
-    <option value="px">Pixels</option>
-    <option value="mm">Millimeters</option>
-    <option value="cm">Centimeters</option>
-</select>
-
-<label for="ruler-toggle">Show Ruler</label>
-<input type="checkbox" id="ruler-toggle" checked>
-
-        </div>
-        <div class="main-content">
-            <canvas id="canvas"></canvas>
-        </div>
+    <div id="drop-area">
+        <input type="file" id="upload" style="display: none;">
+        <button id="load-url">Load Image from URL</button>
+        <input type="text" id="image-url" placeholder="Enter image URL">
+        <button id="crop-btn">Crop</button>
     </div>
+    <canvas id="canvas"></canvas>
+    <div>
+        <label for="canvas-width">Canvas Width:</label>
+        <input type="number" id="canvas-width" min="0">
+        <label for="canvas-height">Canvas Height:</label>
+        <input type="number" id="canvas-height" min="0">
+    </div>
+    <div>
+        <label for="image-width">Image Width:</label>
+        <input type="number" id="image-width" min="0">
+        <label for="image-height">Image Height:</label>
+        <input type="number" id="image-height" min="0">
+    </div>
+    <div>
+        <label for="brightness">Brightness</label>
+        <input type="range" id="brightness" min="-100" max="100">
+        <span id="brightness-label">0%</span>
+    </div>
+    <div>
+        <label for="contrast">Contrast</label>
+        <input type="range" id="contrast" min="-100" max="100">
+        <span id="contrast-label">0%</span>
+    </div>
+    <div>
+        <label for="saturation">Saturation</label>
+        <input type="range" id="saturation" min="-100" max="100">
+        <span id="saturation-label">0%</span>
+    </div>
+    <div>
+        <label for="unit-select">Units</label>
+        <select id="unit-select">
+            <option value="px">Pixels</option>
+            <option value="mm">Millimeters</option>
+            <option value="cm">Centimeters</option>
+        </select>
+        <label for="ruler-toggle">Show Ruler</label>
+        <input type="checkbox" id="ruler-toggle" checked>
+    </div>
+    <div id="object-info" style="position: absolute; background: white; border: 1px solid black; display: none;"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
