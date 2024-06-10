@@ -160,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
         canvasHeightInput.value = canvas.getHeight();
     }
 
+    //crop
+
     function handleCrop() {
         if (!imgInstance) return;
 
@@ -220,7 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateObjectInfo(object) {
+    // obj info
+    
+  function updateObjectInfo(object) {
         const width = object.getScaledWidth();
         const height = object.getScaledHeight();
         const angle = object.angle;
@@ -250,6 +254,22 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('object:modified', function(e) {
         const modifiedObject = e.target;
         updateObjectInfo(modifiedObject);
+    });
+
+    // Listen for object transformations
+    canvas.on('object:scaling', function(e) {
+        const scalingObject = e.target;
+        updateObjectInfo(scalingObject);
+    });
+
+    canvas.on('object:moving', function(e) {
+        const movingObject = e.target;
+        updateObjectInfo(movingObject);
+    });
+
+    canvas.on('object:rotating', function(e) {
+        const rotatingObject = e.target;
+        updateObjectInfo(rotatingObject);
     });
     
 });
