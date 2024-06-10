@@ -1,23 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const uploadInput = document.getElementById('upload');
-    const dropArea = document.getElementById('drop-area');
-    const img = document.getElementById('image');
     const imageUrlInput = document.getElementById('image-url');
     const loadUrlButton = document.getElementById('load-url');
     const cropButton = document.getElementById('crop-btn');
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = new fabric.Canvas('canvas');
 
-    let cropArea = null;
-    let startX, startY, isDragging = false;
-    let cropStarted = false;
+    let imgInstance;
 
     uploadInput.addEventListener('change', handleFileSelect);
-    dropArea.addEventListener('dragover', handleDragOver);
-    dropArea.addEventListener('drop', handleDrop);
-    dropArea.addEventListener('click', () => uploadInput.click());
     loadUrlButton.addEventListener('click', handleImageUrl);
-    cropButton.addEventListener('click', initiateCrop);
+    cropButton.addEventListener('click', handleCrop);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -31,23 +23,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
-            loadImage(URL.createObjectURL(file));
-        }
-    }
-
-    function handleDragOver(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        dropArea.classList.add('dragover');
-    }
-
-    function handleDrop(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        dropArea.classList.remove('dragover');
-        const file = event.dataTransfer.files[0];
-        if (file) {
-            loadImage(URL.createObjectURL(file));
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                loadImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     }
 
@@ -59,22 +39,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadImage(src) {
-        img.src = src;
-        img.onload = () => {
-            img.style.display = 'block';
-        };
+        fabric.Image.fromURL(src, function(oImg) {
+            canvas.clear();
+            imgInstance = oImg;
+            canvas.setWidth(oImg.width);
+            canvas.setHeight(oImg.height);
+            canvas.add(oImg);
+            canvas.renderAll();
+        });
     }
 
     function applyFilters() {
-        const brightness = document.getElementById('brightness').value;
-        const contrast = document.getElementById('contrast').value;
-        const saturation = document.getElementById('saturation').value;
+        if (!imgInstance) return;
 
-        img.style.filter = `
-            brightness(${parseInt(brightness) + 100}%)
-            contrast(${parseInt(contrast) + 100}%)
-            saturate(${parseInt(saturation) + 100}%)
-        `;
+        const brightness = parseInt(document.getElementById('brightness').value, 10);
+        const contrast = parseInt(document.getElementById('contrast').value, 10);
+        const saturation = parseInt(document.getElementById('saturation').value, 10);
+
+        imgInstance.filters = [];
+
+        if (brightness !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Brightness({
+                brightness: brightness / 100
+            }));
+        }
+
+        if (contrast !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Contrast({
+                contrast: contrast / 100
+            }));
+        }
+
+        if (saturation !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Saturation({
+                saturation: saturation / 100
+            }));
+        }
+
+        imgInstance.applyFilters();
+        canvas.renderAll();
     }
 
     function updateLabel(control) {
@@ -82,88 +85,41 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(`${control}-label`).textContent = `${value}%`;
     }
 
-    function initiateCrop() {
-        if (!cropStarted) {
-            // Start cropping
-            if (cropArea) {
-                cropArea.remove();
-            }
+    function handleCrop() {
+        if (!imgInstance) return;
 
-            cropArea = document.createElement('div');
-            cropArea.classList.add('crop-area');
-            dropArea.appendChild(cropArea);
+        const activeObject = canvas.getActiveObject();
 
-            dropArea.addEventListener('mousedown', startCrop);
-            dropArea.addEventListener('mousemove', moveCrop);
-            dropArea.addEventListener('mouseup', endCrop);
+        if (activeObject && activeObject.type === 'rect') {
+            const cropRect = activeObject.getBoundingRect();
+            const cropped = new fabric.Image(imgInstance.getElement(), {
+                left: cropRect.left,
+                top: cropRect.top,
+                width: cropRect.width,
+                height: cropRect.height,
+                clipPath: new fabric.Rect({
+                    left: cropRect.left,
+                    top: cropRect.top,
+                    width: cropRect.width,
+                    height: cropRect.height
+                })
+            });
 
-            cropButton.textContent = 'Confirm Crop';
-            cropStarted = true;
+            canvas.clear();
+            canvas.setWidth(cropRect.width);
+            canvas.setHeight(cropRect.height);
+            canvas.add(cropped);
+            canvas.renderAll();
         } else {
-            // Confirm crop
-            if (!cropArea) return;
-
-            const cropRect = cropArea.getBoundingClientRect();
-            const imgRect = img.getBoundingClientRect();
-
-            const cropX = cropRect.left - imgRect.left;
-            const cropY = cropRect.top - imgRect.top;
-            const cropWidth = cropRect.width;
-            const cropHeight = cropRect.height;
-
-            cropImage(cropX, cropY, cropWidth, cropHeight);
-            cropArea.remove();
-            cropArea = null;
-            cropButton.textContent = 'Crop';
-            cropStarted = false;
+            const rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                width: 200,
+                height: 100,
+                fill: 'rgba(0,0,0,0.3)',
+                selectable: true
+            });
+            canvas.add(rect);
         }
-    }
-
-    function startCrop(event) {
-        if (!cropArea) return;
-
-        startX = event.offsetX;
-        startY = event.offsetY;
-        isDragging = true;
-
-        cropArea.style.left = `${startX}px`;
-        cropArea.style.top = `${startY}px`;
-        cropArea.style.width = '0';
-        cropArea.style.height = '0';
-        cropArea.style.display = 'block';
-    }
-
-    function moveCrop(event) {
-        if (!isDragging || !cropArea) return;
-
-        const currentX = event.offsetX;
-        const currentY = event.offsetY;
-
-        const width = currentX - startX;
-        const height = currentY - startY;
-
-        cropArea.style.width = `${width}px`;
-        cropArea.style.height = `${height}px`;
-    }
-
-    function endCrop() {
-        if (!cropArea) return;
-
-        isDragging = false;
-    }
-
-    function cropImage(x, y, width, height) {
-        const imgWidth = img.naturalWidth;
-        const imgHeight = img.naturalHeight;
-        const imgX = (imgWidth / img.clientWidth) * x;
-        const imgY = (imgHeight / img.clientHeight) * y;
-        const imgWidthScaled = (imgWidth / img.clientWidth) * width;
-        const imgHeightScaled = (imgHeight / img.clientHeight) * height;
-
-        canvas.width = width;
-        canvas.height = height;
-
-        ctx.drawImage(img, imgX, imgY, imgWidthScaled, imgHeightScaled, 0, 0, width, height);
-        img.src = canvas.toDataURL();
     }
 });
