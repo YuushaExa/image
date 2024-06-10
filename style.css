@@ -50,8 +50,24 @@ body {
     justify-content: center;
     align-items: center;
     background: #fff;
+    position: relative;
 }
 
 canvas {
     border: 1px solid #ccc;
+}
+
+.grid-line {
+    position: absolute;
+    background: #ddd;
+}
+
+.grid-line.horizontal {
+    height: 1px;
+    width: 100%;
+}
+
+.grid-line.vertical {
+    width: 1px;
+    height: 100%;
 }
