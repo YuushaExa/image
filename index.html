@@ -65,6 +65,17 @@
             <input type="number" id="canvas-height" placeholder="Canvas Height">
 
             <button id="crop-btn">Crop</button>
+
+            <label for="unit-select">Units</label>
+<select id="unit-select">
+    <option value="px">Pixels</option>
+    <option value="mm">Millimeters</option>
+    <option value="cm">Centimeters</option>
+</select>
+
+<label for="ruler-toggle">Show Ruler</label>
+<input type="checkbox" id="ruler-toggle" checked>
+
         </div>
         <div class="main-content">
             <canvas id="canvas"></canvas>
