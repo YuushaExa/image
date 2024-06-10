@@ -221,64 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function drawGrid() {
-        const gridSize = 50;
-        const width = canvas.getWidth();
-        const height = canvas.getHeight();
-        const verticalLines = Math.ceil(width / gridSize);
-        const horizontalLines = Math.ceil(height / gridSize);
 
-        canvas.clearContext(canvas.contextTop);
-        for (let i = 0; i < verticalLines; i++) {
-            const x = i * gridSize;
-            drawGridLine(x, 0, x, height, 'vertical');
-        }
-
-        for (let i = 0; i < horizontalLines; i++) {
-            const y = i * gridSize;
-            drawGridLine(0, y, width, y, 'horizontal');
-        }
-
-        if (imgInstance) {
-            canvas.add(imgInstance);
-        }
-    }
-
-    function drawGridLine(x1, y1, x2, y2, className) {
-        const line = document.createElement('div');
-        line.classList.add('grid-line', className);
-        line.style.left = `${x1}px`;
-        line.style.top = `${y1}px`;
-        document.querySelector('.main-content').appendChild(line);
-    }
-
-    function handleMouseWheel(opt) {
-        const delta = opt.e.deltaY;
-        const pointer = canvas.getPointer(opt.e);
-        let zoom = canvas.getZoom();
-        zoom = zoom - delta / 200;
-        if (zoom > 20) zoom = 20;
-        if (zoom < 0.01) zoom = 0.01;
-        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
-        const vpt = canvas.viewportTransform;
-        if (zoom < 1) {
-            vpt[4] = 20 - zoom * 20;
-            vpt[5] = 20 - zoom * 20;
-        } else {
-            if (vpt[4] >= 0) {
-                vpt[4] = 0;
-            } else if (vpt[4] < canvas.getWidth() - canvas.getWidth() * zoom) {
-                vpt[4] = canvas.getWidth() - canvas.getWidth() * zoom;
-            }
-            if (vpt[5] >= 0) {
-                vpt[5] = 0;
-            } else if (vpt[5] < canvas.getHeight() - canvas.getHeight() * zoom) {
-                vpt[5] = canvas.getHeight() - canvas.getHeight() * zoom;
-            }
-        }
-    }
 
 
     
