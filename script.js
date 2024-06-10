@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadUrlButton = document.getElementById('load-url');
     const cropButton = document.getElementById('crop-btn');
     const canvas = new fabric.Canvas('canvas');
+    const imageWidthInput = document.getElementById('image-width');
+    const imageHeightInput = document.getElementById('image-height');
+    const canvasWidthInput = document.getElementById('canvas-width');
+    const canvasHeightInput = document.getElementById('canvas-height');
 
     let imgInstance;
     let isCropping = false;
@@ -16,6 +20,11 @@ document.addEventListener('DOMContentLoaded', function() {
     dropArea.addEventListener('click', () => uploadInput.click());
     loadUrlButton.addEventListener('click', handleImageUrl);
     cropButton.addEventListener('click', handleCrop);
+
+    canvasWidthInput.addEventListener('input', updateCanvasSize);
+    canvasHeightInput.addEventListener('input', updateCanvasSize);
+    imageWidthInput.addEventListener('input', updateImageSize);
+    imageHeightInput.addEventListener('input', updateImageSize);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -73,6 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.add(oImg);
             canvas.centerObject(oImg);
             canvas.renderAll();
+            updateImageSizeInputs();
+            updateCanvasSizeInputs();
         });
     }
 
@@ -112,16 +123,55 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(`${control}-label`).textContent = `${value}%`;
     }
 
+    function updateCanvasSize() {
+        const width = parseInt(canvasWidthInput.value, 10);
+        const height = parseInt(canvasHeightInput.value, 10);
+        if (!isNaN(width) && !isNaN(height)) {
+            canvas.setWidth(width);
+            canvas.setHeight(height);
+            canvas.renderAll();
+        }
+    }
+
+    function updateImageSize() {
+        const width = parseInt(imageWidthInput.value, 10);
+        const height = parseInt(imageHeightInput.value, 10);
+        if (!isNaN(width) && !isNaN(height) && imgInstance) {
+            imgInstance.set({
+                scaleX: width / imgInstance.width,
+                scaleY: height / imgInstance.height
+            });
+            canvas.renderAll();
+        }
+    }
+
+    function updateImageSizeInputs() {
+        if (imgInstance) {
+            imageWidthInput.value = Math.round(imgInstance.getScaledWidth());
+            imageHeightInput.value = Math.round(imgInstance.getScaledHeight());
+        }
+    }
+
+    function updateCanvasSizeInputs() {
+        canvasWidthInput.value = canvas.getWidth();
+        canvasHeightInput.value = canvas.getHeight();
+    }
+
     function handleCrop() {
         if (!imgInstance) return;
 
         if (!isCropping) {
             // Start cropping
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const cropWidth = canvas.width / 2;
+            const cropHeight = canvas.height / 2;
+
             cropRect = new fabric.Rect({
-                left: 50,
-                top: 50,
-                width: 100,
-                height: 100,
+                left: centerX - cropWidth / 2,
+                top: centerY - cropHeight / 2,
+                width: cropWidth,
+                height: cropHeight,
                 fill: 'rgba(0,0,0,0.3)',
                 selectable: true
             });
@@ -150,18 +200,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             croppedImg.onload = function() {
                 const croppedInstance = new fabric.Image(croppedImg, {
-                    left: 0,
-                    top: 0,
-                    scaleX: scaleX,
-                    scaleY: scaleY
+                    left: imgInstance.left,
+                    top: imgInstance.top,
+                    scaleX: imgInstance.scaleX,
+                    scaleY: imgInstance.scaleY
                 });
                 canvas.clear();
                 canvas.add(croppedInstance);
-                canvas.setWidth(width);
-                canvas.setHeight(height);
                 canvas.centerObject(croppedInstance);
                 canvas.renderAll();
                 imgInstance = croppedInstance;
+                updateImageSizeInputs();
             };
 
             isCropping = false;
