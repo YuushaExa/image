@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.renderAll();
             updateImageSizeInputs();
             updateCanvasSizeInputs();
-            drawGrid();
         });
     }
 
@@ -135,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setWidth(width);
             canvas.setHeight(height);
             canvas.renderAll();
-            drawGrid();
         }
     }
 
@@ -195,15 +193,20 @@ document.addEventListener('DOMContentLoaded', function() {
             isCropping = false;
             const rect = cropRect.getBoundingRect();
             const croppedImg = new fabric.Image(imgInstance.getElement(), {
-                left: rect.left,
-                top: rect.top,
+                left: -rect.left,
+                top: -rect.top,
                 scaleX: imgInstance.scaleX,
                 scaleY: imgInstance.scaleY,
-                clipPath: cropRect
+                clipPath: new fabric.Rect({
+                    width: rect.width,
+                    height: rect.height,
+                    left: 0,
+                    top: 0
+                })
             });
             canvas.clear();
-            canvas.setWidth(cropRect.width);
-            canvas.setHeight(cropRect.height);
+            canvas.setWidth(rect.width);
+            canvas.setHeight(rect.height);
             canvas.add(croppedImg);
             canvas.centerObject(croppedImg);
             canvas.renderAll();
@@ -216,9 +219,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function displayObjectInfo(event) {
         const obj = event.target;
-        const size = `Size: ${Math.round(obj.getScaledWidth())} x ${Math.round(obj.getScaledHeight())}`;
-        const rotation = `Rotation: ${Math.round(obj.angle)}°`;
-        infoText.textContent = `${size}, ${rotation}`;
+        if (obj.type === 'image') {
+            const size = `Size: ${Math.round(obj.getScaledWidth())} x ${Math.round(obj.getScaledHeight())}`;
+            const rotation = `Rotation: ${Math.round(obj.angle)}°`;
+            infoText.textContent = `${size}, ${rotation}`;
+        }
     }
 
     function clearObjectInfo() {
@@ -230,15 +235,5 @@ document.addEventListener('DOMContentLoaded', function() {
         const size = `Size: ${Math.round(rect.getScaledWidth())} x ${Math.round(rect.getScaledHeight())}`;
         const position = `Position: ${Math.round(rect.left)}, ${Math.round(rect.top)}`;
         infoText.textContent = `${size}, ${position}`;
-    }
-
-    function drawGrid() {
-        const gridSize = 50;
-        for (let i = 0; i < (canvas.width / gridSize); i++) {
-            canvas.add(new fabric.Line([i * gridSize, 0, i * gridSize, canvas.height], { stroke: '#ccc', selectable: false, evented: false }));
-        }
-        for (let i = 0; i < (canvas.height / gridSize); i++) {
-            canvas.add(new fabric.Line([0, i * gridSize, canvas.width, i * gridSize], { stroke: '#ccc', selectable: false, evented: false }));
-        }
     }
 });
