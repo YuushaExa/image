@@ -10,11 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageHeightInput = document.getElementById('image-height');
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
+    const unitSelect = document.getElementById('unit-select');
+    const rulerToggle = document.getElementById('ruler-toggle');
 
     let imgInstance;
     let isCropping = false;
     let cropRect;
     let zoomLevel = 1;
+    let rulerEnabled = true;
+    let currentUnit = 'px';
 
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
@@ -27,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
     canvas.on('mouse:wheel', handleMouseWheel);
+    canvas.on('object:selected', showObjectInfo);
+    unitSelect.addEventListener('change', updateUnit);
+    rulerToggle.addEventListener('change', toggleRuler);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -221,8 +228,123 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function handleMouseWheel(opt) {
+        const delta = opt.e.deltaY;
+        zoomLevel = zoomLevel + delta / 200;
+        if (zoomLevel > 20) zoomLevel = 20;
+        if (zoomLevel < 1) zoomLevel = 1;
+        canvas.setZoom(zoomLevel);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+        drawGrid();
+    }
 
+    function drawGrid() {
+        const gridSize = 50;
+        const ctx = canvas.getContext();
 
+        for (let i = 0; i < (canvas.getWidth() / gridSize); i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * gridSize, 0);
+            ctx.lineTo(i * gridSize, canvas.getHeight());
+            ctx.strokeStyle = '#ccc';
+            ctx.stroke();
+        }
 
-    
+        for (let i = 0; i < (canvas.getHeight() / gridSize); i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * gridSize);
+            ctx.lineTo(canvas.getWidth(), i * gridSize);
+            ctx.strokeStyle = '#ccc';
+            ctx.stroke();
+        }
+    }
+
+    function toggleRuler() {
+        rulerEnabled = !rulerEnabled;
+        if (rulerEnabled) {
+            drawRulers();
+        } else {
+            clearRulers();
+        }
+    }
+
+    function drawRulers() {
+        // Draw horizontal ruler
+        const hRuler = document.createElement('canvas');
+        hRuler.id = 'h-ruler';
+        hRuler.width = canvas.getWidth();
+        hRuler.height = 20;
+        const hCtx = hRuler.getContext('2d');
+        document.body.appendChild(hRuler);
+
+        for (let i = 0; i < canvas.getWidth(); i += 10) {
+            hCtx.beginPath();
+            hCtx.moveTo(i, 0);
+            hCtx.lineTo(i, i % 50 === 0 ? 20 : 10);
+            hCtx.strokeStyle = '#000';
+            hCtx.stroke();
+        }
+
+        // Draw vertical ruler
+        const vRuler = document.createElement('canvas');
+        vRuler.id = 'v-ruler';
+        vRuler.width = 20;
+        vRuler.height = canvas.getHeight();
+        const vCtx = vRuler.getContext('2d');
+        document.body.appendChild(vRuler);
+
+        for (let i = 0; i < canvas.getHeight(); i += 10) {
+            vCtx.beginPath();
+            vCtx.moveTo(0, i);
+            vCtx.lineTo(i % 50 === 0 ? 20 : 10, i);
+            vCtx.strokeStyle = '#000';
+            vCtx.stroke();
+        }
+    }
+
+    function clearRulers() {
+        const hRuler = document.getElementById('h-ruler');
+        const vRuler = document.getElementById('v-ruler');
+        if (hRuler) hRuler.remove();
+        if (vRuler) vRuler.remove();
+    }
+
+    function updateUnit() {
+        currentUnit = unitSelect.value;
+        canvas.renderAll();
+    }
+
+    function showObjectInfo(e) {
+        const obj = e.target;
+        const info = document.createElement('div');
+        info.id = 'object-info';
+        info.style.position = 'absolute';
+        info.style.left = `${obj.left}px`;
+        info.style.top = `${obj.top + obj.height * obj.scaleY}px`;
+        info.style.backgroundColor = 'white';
+        info.style.border = '1px solid black';
+        info.style.padding = '5px';
+        info.innerHTML = `
+            <p>Width: ${convertUnits(obj.width * obj.scaleX)}</p>
+            <p>Height: ${convertUnits(obj.height * obj.scaleY)}</p>
+            <p>Angle: ${obj.angle.toFixed(2)}°</p>
+            <p>Left: ${convertUnits(obj.left)}</p>
+            <p>Top: ${convertUnits(obj.top)}</p>
+        `;
+        document.body.appendChild(info);
+    }
+
+    function convertUnits(value) {
+        switch (currentUnit) {
+            case 'px':
+                return `${value.toFixed(2)} px`;
+            case 'mm':
+                return `${(value / 3.7795275591).toFixed(2)} mm`;
+            case 'cm':
+                return `${(value / 37.795275591).toFixed(2)} cm`;
+            default:
+                return `${value.toFixed(2)} px`;
+        }
+    }
 });
