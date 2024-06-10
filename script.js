@@ -281,8 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    const grid = 20; // Adjust the grid size as needed
-    const inset = 10; // Adjust the inset value as needed
+     const grid = 200; // Adjust the grid size as needed
+    const inset = 100; // Adjust the inset value as needed
 
     // Add vertical and horizontal grid lines with labels
     for (var i = 0; i < (600 / grid); i++) {
