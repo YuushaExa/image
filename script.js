@@ -275,15 +275,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updateObjectInfo(rotatingObject);
     });
 
-     window.setObjectAngle = function() {
-        const angleInput = document.getElementById('angleInput').value;
+  angleInput.addEventListener('input', function() {
         const activeObject = canvas.getActiveObject();
-        if (activeObject && angleInput !== '') {
-            activeObject.set('angle', parseFloat(angleInput)).setCoords();
+        if (activeObject && angleInput.value !== '') {
+            activeObject.set('angle', parseFloat(angleInput.value)).setCoords();
             canvas.renderAll();
             updateObjectInfo(activeObject);
         }
-    };
+    });
 
     // Toggle info display
     toggleInfo.addEventListener('change', function() {
