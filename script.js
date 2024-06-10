@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setWidth(oImg.width);
             canvas.setHeight(oImg.height);
             canvas.add(oImg);
+            canvas.centerObject(oImg);
             canvas.renderAll();
         });
     }
@@ -158,6 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 canvas.add(croppedInstance);
                 canvas.setWidth(width);
                 canvas.setHeight(height);
+                canvas.centerObject(croppedInstance);
                 canvas.renderAll();
                 imgInstance = croppedInstance;
             };
