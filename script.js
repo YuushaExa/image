@@ -220,5 +220,24 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.remove(cropRect);
         }
     }
-  
+
+    // Update object size display
+    function updateObjectInfo(object) {
+        const width = object.getScaledWidth();
+        const height = object.getScaledHeight();
+        objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px`;
+    }
+
+    // Listen for object selection
+    canvas.on('selection:created', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+
+    // Listen for object selection updates
+    canvas.on('selection:updated', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+    
 });
