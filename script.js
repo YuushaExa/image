@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageHeightInput = document.getElementById('image-height');
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
+    const infoText = document.getElementById('info-text');
 
     let imgInstance;
     let isCropping = false;
     let cropRect;
-    let zoomLevel = 1;
 
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
     canvas.on('mouse:wheel', handleMouseWheel);
+    canvas.on('object:selected', displayObjectInfo);
+    canvas.on('selection:cleared', clearObjectInfo);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -161,64 +163,82 @@ document.addEventListener('DOMContentLoaded', function() {
         canvasHeightInput.value = canvas.getHeight();
     }
 
+    function handleMouseWheel(event) {
+        const delta = event.e.deltaY;
+        const zoom = canvas.getZoom();
+        canvas.setZoom(zoom - delta / 400);
+        event.e.preventDefault();
+        event.e.stopPropagation();
+    }
+
     function handleCrop() {
-        if (!imgInstance) return;
-
         if (!isCropping) {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const cropWidth = canvas.width / 2;
-            const cropHeight = canvas.height / 2;
-
+            cropButton.textContent = 'Apply Crop';
+            isCropping = true;
             cropRect = new fabric.Rect({
-                left: centerX - cropWidth / 2,
-                top: centerY - cropHeight / 2,
-                width: cropWidth,
-                height: cropHeight,
+                left: 100,
+                top: 100,
+                width: 200,
+                height: 200,
                 fill: 'rgba(0,0,0,0.3)',
-                selectable: true
+                selectable: false,
+                evented: false
             });
             canvas.add(cropRect);
-            isCropping = true;
-            cropButton.textContent = 'Confirm Crop';
+            canvas.setActiveObject(cropRect);
+            canvas.renderAll();
+            canvas.on('object:moving', updateCropInfo);
+            canvas.on('object:scaling', updateCropInfo);
+            canvas.on('object:rotating', updateCropInfo);
         } else {
-            const cropData = cropRect.getBoundingRect();
-
-            const scaleX = imgInstance.scaleX || 1;
-            const scaleY = imgInstance.scaleY || 1;
-
-            const left = (cropData.left - imgInstance.left) / scaleX;
-            const top = (cropData.top - imgInstance.top) / scaleY;
-            const width = cropData.width / scaleX;
-            const height = cropData.height / scaleY;
-
-            const croppedImg = new Image();
-            croppedImg.src = imgInstance.toDataURL({
-                left: left,
-                top: top,
-                width: width,
-                height: height
-            });
-
-            croppedImg.onload = function() {
-                const croppedInstance = new fabric.Image(croppedImg, {
-                    left: imgInstance.left,
-                    top: imgInstance.top,
-                    scaleX: imgInstance.scaleX,
-                    scaleY: imgInstance.scaleY
-                });
-                canvas.clear();
-                canvas.add(croppedInstance);
-                canvas.centerObject(croppedInstance);
-                canvas.renderAll();
-                imgInstance = croppedInstance;
-                updateImageSizeInputs();
-            };
-
-            isCropping = false;
             cropButton.textContent = 'Crop';
-            canvas.remove(cropRect);
+            isCropping = false;
+            const rect = cropRect.getBoundingRect();
+            const croppedImg = new fabric.Image(imgInstance.getElement(), {
+                left: rect.left,
+                top: rect.top,
+                scaleX: imgInstance.scaleX,
+                scaleY: imgInstance.scaleY,
+                clipPath: cropRect
+            });
+            canvas.clear();
+            canvas.setWidth(cropRect.width);
+            canvas.setHeight(cropRect.height);
+            canvas.add(croppedImg);
+            canvas.centerObject(croppedImg);
+            canvas.renderAll();
+            cropRect = null;
+            canvas.off('object:moving', updateCropInfo);
+            canvas.off('object:scaling', updateCropInfo);
+            canvas.off('object:rotating', updateCropInfo);
         }
     }
-  
+
+    function displayObjectInfo(event) {
+        const obj = event.target;
+        const size = `Size: ${Math.round(obj.getScaledWidth())} x ${Math.round(obj.getScaledHeight())}`;
+        const rotation = `Rotation: ${Math.round(obj.angle)}°`;
+        infoText.textContent = `${size}, ${rotation}`;
+    }
+
+    function clearObjectInfo() {
+        infoText.textContent = '';
+    }
+
+    function updateCropInfo(event) {
+        const rect = event.target;
+        const size = `Size: ${Math.round(rect.getScaledWidth())} x ${Math.round(rect.getScaledHeight())}`;
+        const position = `Position: ${Math.round(rect.left)}, ${Math.round(rect.top)}`;
+        infoText.textContent = `${size}, ${position}`;
+    }
+
+    function drawGrid() {
+        const gridSize = 50;
+        for (let i = 0; i < (canvas.width / gridSize); i++) {
+            canvas.add(new fabric.Line([i * gridSize, 0, i * gridSize, canvas.height], { stroke: '#ccc', selectable: false, evented: false }));
+        }
+        for (let i = 0; i < (canvas.height / gridSize); i++) {
+            canvas.add(new fabric.Line([0, i * gridSize, canvas.width, i * gridSize], { stroke: '#ccc', selectable: false, evented: false }));
+        }
+    }
 });
