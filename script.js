@@ -132,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setWidth(width);
             canvas.setHeight(height);
             canvas.renderAll();
-            drawGrid();
         }
     }
 
@@ -224,13 +223,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // obj info
     
-  function updateObjectInfo(object) {
-        const width = object.getScaledWidth();
-        const height = object.getScaledHeight();
-        const angle = object.angle;
-        const left = object.left;
-        const top = object.top;
-        objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px, Angle: ${angle.toFixed(2)}°, Position: (${left.toFixed(2)}, ${top.toFixed(2)})`;
+   function updateObjectInfo(object) {
+        if (toggleInfo.checked) {
+            const width = object.getScaledWidth();
+            const height = object.getScaledHeight();
+            const angle = object.angle;
+            const left = object.left;
+            const top = object.top;
+            objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px, Angle: ${angle.toFixed(2)}°, Position: (${left.toFixed(2)}, ${top.toFixed(2)})`;
+        } else {
+            objectInfo.innerHTML = '';
+        }
     }
 
     // Listen for object selection
@@ -270,6 +273,26 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('object:rotating', function(e) {
         const rotatingObject = e.target;
         updateObjectInfo(rotatingObject);
+    });
+
+     window.setObjectAngle = function() {
+        const angleInput = document.getElementById('angleInput').value;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && angleInput !== '') {
+            activeObject.set('angle', parseFloat(angleInput)).setCoords();
+            canvas.renderAll();
+            updateObjectInfo(activeObject);
+        }
+    };
+
+    // Toggle info display
+    toggleInfo.addEventListener('change', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            updateObjectInfo(activeObject);
+        } else {
+            objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
+        }
     });
     
 });
