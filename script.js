@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasHeightInput = document.getElementById('canvas-height');
     const unitSelect = document.getElementById('unit-select');
     const rulerToggle = document.getElementById('ruler-toggle');
+    const objectInfo = document.getElementById('object-info');
 
     let imgInstance;
     let isCropping = false;
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     imageHeightInput.addEventListener('input', updateImageSize);
     canvas.on('mouse:wheel', handleMouseWheel);
     canvas.on('object:selected', showObjectInfo);
+    canvas.on('selection:cleared', hideObjectInfo);
     unitSelect.addEventListener('change', updateUnit);
     rulerToggle.addEventListener('change', toggleRuler);
 
@@ -94,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateImageSizeInputs();
             updateCanvasSizeInputs();
             drawGrid();
+            drawRulers();
         });
     }
 
@@ -141,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setHeight(height);
             canvas.renderAll();
             drawGrid();
+            drawRulers();
         }
     }
 
@@ -182,82 +186,67 @@ document.addEventListener('DOMContentLoaded', function() {
                 top: centerY - cropHeight / 2,
                 width: cropWidth,
                 height: cropHeight,
-                fill: 'rgba(0,0,0,0.3)',
-                selectable: true
+                fill: 'rgba(255, 255, 255, 0.5)',
+                selectable: false,
+                evented: false
             });
+
             canvas.add(cropRect);
+            canvas.setActiveObject(cropRect);
             isCropping = true;
-            cropButton.textContent = 'Confirm Crop';
         } else {
-            const cropData = cropRect.getBoundingRect();
-
-            const scaleX = imgInstance.scaleX || 1;
-            const scaleY = imgInstance.scaleY || 1;
-
-            const left = (cropData.left - imgInstance.left) / scaleX;
-            const top = (cropData.top - imgInstance.top) / scaleY;
-            const width = cropData.width / scaleX;
-            const height = cropData.height / scaleY;
-
-            const croppedImg = new Image();
-            croppedImg.src = imgInstance.toDataURL({
-                left: left,
-                top: top,
-                width: width,
-                height: height
+            const rect = canvas.getActiveObject();
+            const cropped = new fabric.Image(imgInstance.getElement(), {
+                left: 0,
+                top: 0,
+                scaleX: imgInstance.scaleX,
+                scaleY: imgInstance.scaleY,
+                clipPath: new fabric.Rect({
+                    left: rect.left / imgInstance.scaleX,
+                    top: rect.top / imgInstance.scaleY,
+                    width: rect.width / imgInstance.scaleX,
+                    height: rect.height / imgInstance.scaleY
+                })
             });
 
-            croppedImg.onload = function() {
-                const croppedInstance = new fabric.Image(croppedImg, {
-                    left: imgInstance.left,
-                    top: imgInstance.top,
-                    scaleX: imgInstance.scaleX,
-                    scaleY: imgInstance.scaleY
-                });
-                canvas.clear();
-                canvas.add(croppedInstance);
-                canvas.centerObject(croppedInstance);
-                canvas.renderAll();
-                imgInstance = croppedInstance;
-                updateImageSizeInputs();
-            };
-
+            canvas.clear();
+            canvas.add(cropped);
+            canvas.centerObject(cropped);
+            canvas.renderAll();
+            imgInstance = cropped;
             isCropping = false;
-            cropButton.textContent = 'Crop';
-            canvas.remove(cropRect);
         }
     }
 
     function handleMouseWheel(opt) {
         const delta = opt.e.deltaY;
         zoomLevel = zoomLevel + delta / 200;
-        if (zoomLevel > 20) zoomLevel = 20;
-        if (zoomLevel < 1) zoomLevel = 1;
+        if (zoomLevel > 3) zoomLevel = 3;
+        if (zoomLevel < 0.2) zoomLevel = 0.2;
         canvas.setZoom(zoomLevel);
         opt.e.preventDefault();
         opt.e.stopPropagation();
-        drawGrid();
     }
 
     function drawGrid() {
         const gridSize = 50;
-        const ctx = canvas.getContext();
+        const ctx = canvas.getContext('2d');
+        const width = canvas.getWidth();
+        const height = canvas.getHeight();
+        ctx.beginPath();
 
-        for (let i = 0; i < (canvas.getWidth() / gridSize); i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * gridSize, 0);
-            ctx.lineTo(i * gridSize, canvas.getHeight());
-            ctx.strokeStyle = '#ccc';
-            ctx.stroke();
+        for (let i = 0; i <= width; i += gridSize) {
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, height);
         }
 
-        for (let i = 0; i < (canvas.getHeight() / gridSize); i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, i * gridSize);
-            ctx.lineTo(canvas.getWidth(), i * gridSize);
-            ctx.strokeStyle = '#ccc';
-            ctx.stroke();
+        for (let i = 0; i <= height; i += gridSize) {
+            ctx.moveTo(0, i);
+            ctx.lineTo(width, i);
         }
+
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.stroke();
     }
 
     function toggleRuler() {
@@ -270,11 +259,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function drawRulers() {
+        clearRulers();
+
         // Draw horizontal ruler
         const hRuler = document.createElement('canvas');
         hRuler.id = 'h-ruler';
         hRuler.width = canvas.getWidth();
         hRuler.height = 20;
+        hRuler.style.position = 'absolute';
+        hRuler.style.top = '0';
+        hRuler.style.left = '20px';
         const hCtx = hRuler.getContext('2d');
         document.body.appendChild(hRuler);
 
@@ -284,6 +278,9 @@ document.addEventListener('DOMContentLoaded', function() {
             hCtx.lineTo(i, i % 50 === 0 ? 20 : 10);
             hCtx.strokeStyle = '#000';
             hCtx.stroke();
+            if (i % 50 === 0) {
+                hCtx.fillText(convertUnits(i), i + 2, 10);
+            }
         }
 
         // Draw vertical ruler
@@ -291,6 +288,9 @@ document.addEventListener('DOMContentLoaded', function() {
         vRuler.id = 'v-ruler';
         vRuler.width = 20;
         vRuler.height = canvas.getHeight();
+        vRuler.style.position = 'absolute';
+        vRuler.style.top = '20px';
+        vRuler.style.left = '0';
         const vCtx = vRuler.getContext('2d');
         document.body.appendChild(vRuler);
 
@@ -300,6 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
             vCtx.lineTo(i % 50 === 0 ? 20 : 10, i);
             vCtx.strokeStyle = '#000';
             vCtx.stroke();
+            if (i % 50 === 0) {
+                vCtx.fillText(convertUnits(i), 2, i + 10);
+            }
         }
     }
 
@@ -312,27 +315,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateUnit() {
         currentUnit = unitSelect.value;
+        drawRulers();
         canvas.renderAll();
     }
 
     function showObjectInfo(e) {
         const obj = e.target;
-        const info = document.createElement('div');
-        info.id = 'object-info';
-        info.style.position = 'absolute';
-        info.style.left = `${obj.left}px`;
-        info.style.top = `${obj.top + obj.height * obj.scaleY}px`;
-        info.style.backgroundColor = 'white';
-        info.style.border = '1px solid black';
-        info.style.padding = '5px';
-        info.innerHTML = `
+        objectInfo.style.display = 'block';
+        objectInfo.style.left = `${obj.left + obj.width * obj.scaleX + 10}px`;
+        objectInfo.style.top = `${obj.top}px`;
+        objectInfo.innerHTML = `
             <p>Width: ${convertUnits(obj.width * obj.scaleX)}</p>
             <p>Height: ${convertUnits(obj.height * obj.scaleY)}</p>
             <p>Angle: ${obj.angle.toFixed(2)}°</p>
             <p>Left: ${convertUnits(obj.left)}</p>
             <p>Top: ${convertUnits(obj.top)}</p>
         `;
-        document.body.appendChild(info);
+    }
+
+    function hideObjectInfo() {
+        objectInfo.style.display = 'none';
     }
 
     function convertUnits(value) {
