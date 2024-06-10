@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // obj info
     
-   function updateObjectInfo(object) {
+      function updateObjectInfo(object) {
         if (toggleInfo.checked) {
             const width = object.getScaledWidth();
             const height = object.getScaledHeight();
@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const left = object.left;
             const top = object.top;
             objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px, Angle: ${angle.toFixed(2)}°, Position: (${left.toFixed(2)}, ${top.toFixed(2)})`;
+            angleInput.value = angle.toFixed(2);
         } else {
             objectInfo.innerHTML = '';
         }
