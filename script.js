@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageUrlInput = document.getElementById('image-url');
     const loadUrlButton = document.getElementById('load-url');
     const cropButton = document.getElementById('crop-btn');
+    const canvasElement = document.getElementById('canvas');
     const canvas = new fabric.Canvas('canvas');
     const imageWidthInput = document.getElementById('image-width');
     const imageHeightInput = document.getElementById('image-height');
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let imgInstance;
     let isCropping = false;
     let cropRect;
+    let zoomLevel = 1;
 
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
@@ -20,11 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
     dropArea.addEventListener('click', () => uploadInput.click());
     loadUrlButton.addEventListener('click', handleImageUrl);
     cropButton.addEventListener('click', handleCrop);
-
     canvasWidthInput.addEventListener('input', updateCanvasSize);
     canvasHeightInput.addEventListener('input', updateCanvasSize);
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
+    canvas.on('mouse:wheel', handleMouseWheel);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -77,13 +79,14 @@ document.addEventListener('DOMContentLoaded', function() {
         fabric.Image.fromURL(src, function(oImg) {
             canvas.clear();
             imgInstance = oImg;
-            canvas.setWidth(oImg.width);
-            canvas.setHeight(oImg.height);
+            canvas.setWidth(canvasWidthInput.value || oImg.width);
+            canvas.setHeight(canvasHeightInput.value || oImg.height);
             canvas.add(oImg);
             canvas.centerObject(oImg);
             canvas.renderAll();
             updateImageSizeInputs();
             updateCanvasSizeInputs();
+            drawGrid();
         });
     }
 
@@ -130,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setWidth(width);
             canvas.setHeight(height);
             canvas.renderAll();
+            drawGrid();
         }
     }
 
@@ -161,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!imgInstance) return;
 
         if (!isCropping) {
-            // Start cropping
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const cropWidth = canvas.width / 2;
@@ -179,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
             isCropping = true;
             cropButton.textContent = 'Confirm Crop';
         } else {
-            // Confirm crop
             const cropData = cropRect.getBoundingRect();
 
             const scaleX = imgInstance.scaleX || 1;
@@ -216,6 +218,65 @@ document.addEventListener('DOMContentLoaded', function() {
             isCropping = false;
             cropButton.textContent = 'Crop';
             canvas.remove(cropRect);
+        }
+    }
+
+    function drawGrid() {
+        const gridSize = 50;
+        const width = canvas.getWidth();
+        const height = canvas.getHeight();
+        const verticalLines = Math.ceil(width / gridSize);
+        const horizontalLines = Math.ceil(height / gridSize);
+
+        canvas.clearContext(canvas.contextTop);
+        for (let i = 0; i < verticalLines; i++) {
+            const x = i * gridSize;
+            drawGridLine(x, 0, x, height, 'vertical');
+        }
+
+        for (let i = 0; i < horizontalLines; i++) {
+            const y = i * gridSize;
+            drawGridLine(0, y, width, y, 'horizontal');
+        }
+
+        if (imgInstance) {
+            canvas.add(imgInstance);
+        }
+    }
+
+    function drawGridLine(x1, y1, x2, y2, className) {
+        const line = document.createElement('div');
+        line.classList.add('grid-line', className);
+        line.style.left = `${x1}px`;
+        line.style.top = `${y1}px`;
+        document.querySelector('.main-content').appendChild(line);
+    }
+
+    function handleMouseWheel(opt) {
+        const delta = opt.e.deltaY;
+        const pointer = canvas.getPointer(opt.e);
+        let zoom = canvas.getZoom();
+        zoom = zoom - delta / 200;
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.01) zoom = 0.01;
+        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+        const vpt = canvas.viewportTransform;
+        if (zoom < 1) {
+            vpt[4] = 200 - zoom * 200;
+            vpt[5] = 200 - zoom * 200;
+        } else {
+            if (vpt[4] >= 0) {
+                vpt[4] = 0;
+            } else if (vpt[4] < canvas.getWidth() - canvas.getWidth() * zoom) {
+                vpt[4] = canvas.getWidth() - canvas.getWidth() * zoom;
+            }
+            if (vpt[5] >= 0) {
+                vpt[5] = 0;
+            } else if (vpt[5] < canvas.getHeight() - canvas.getHeight() * zoom) {
+                vpt[5] = canvas.getHeight() - canvas.getHeight() * zoom;
+            }
         }
     }
 });
