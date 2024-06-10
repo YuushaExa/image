@@ -10,16 +10,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageHeightInput = document.getElementById('image-height');
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
-    const unitSelect = document.getElementById('unit-select');
-    const rulerToggle = document.getElementById('ruler-toggle');
-    const objectInfo = document.getElementById('object-info');
 
     let imgInstance;
     let isCropping = false;
     let cropRect;
     let zoomLevel = 1;
-    let rulerEnabled = true;
-    let currentUnit = 'px';
 
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
@@ -32,10 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
     canvas.on('mouse:wheel', handleMouseWheel);
-    canvas.on('object:selected', showObjectInfo);
-    canvas.on('selection:cleared', hideObjectInfo);
-    unitSelect.addEventListener('change', updateUnit);
-    rulerToggle.addEventListener('change', toggleRuler);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -96,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateImageSizeInputs();
             updateCanvasSizeInputs();
             drawGrid();
-            drawRulers();
         });
     }
 
@@ -144,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setHeight(height);
             canvas.renderAll();
             drawGrid();
-            drawRulers();
         }
     }
 
@@ -186,167 +175,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 top: centerY - cropHeight / 2,
                 width: cropWidth,
                 height: cropHeight,
-                fill: 'rgba(255, 255, 255, 0.5)',
-                selectable: false,
-                evented: false
+                fill: 'rgba(0,0,0,0.3)',
+                selectable: true
             });
-
             canvas.add(cropRect);
-            canvas.setActiveObject(cropRect);
             isCropping = true;
+            cropButton.textContent = 'Confirm Crop';
         } else {
-            const rect = canvas.getActiveObject();
-            const cropped = new fabric.Image(imgInstance.getElement(), {
-                left: 0,
-                top: 0,
-                scaleX: imgInstance.scaleX,
-                scaleY: imgInstance.scaleY,
-                clipPath: new fabric.Rect({
-                    left: rect.left / imgInstance.scaleX,
-                    top: rect.top / imgInstance.scaleY,
-                    width: rect.width / imgInstance.scaleX,
-                    height: rect.height / imgInstance.scaleY
-                })
+            const cropData = cropRect.getBoundingRect();
+
+            const scaleX = imgInstance.scaleX || 1;
+            const scaleY = imgInstance.scaleY || 1;
+
+            const left = (cropData.left - imgInstance.left) / scaleX;
+            const top = (cropData.top - imgInstance.top) / scaleY;
+            const width = cropData.width / scaleX;
+            const height = cropData.height / scaleY;
+
+            const croppedImg = new Image();
+            croppedImg.src = imgInstance.toDataURL({
+                left: left,
+                top: top,
+                width: width,
+                height: height
             });
 
-            canvas.clear();
-            canvas.add(cropped);
-            canvas.centerObject(cropped);
-            canvas.renderAll();
-            imgInstance = cropped;
+            croppedImg.onload = function() {
+                const croppedInstance = new fabric.Image(croppedImg, {
+                    left: imgInstance.left,
+                    top: imgInstance.top,
+                    scaleX: imgInstance.scaleX,
+                    scaleY: imgInstance.scaleY
+                });
+                canvas.clear();
+                canvas.add(croppedInstance);
+                canvas.centerObject(croppedInstance);
+                canvas.renderAll();
+                imgInstance = croppedInstance;
+                updateImageSizeInputs();
+            };
+
             isCropping = false;
+            cropButton.textContent = 'Crop';
+            canvas.remove(cropRect);
         }
     }
-
-    function handleMouseWheel(opt) {
-        const delta = opt.e.deltaY;
-        zoomLevel = zoomLevel + delta / 200;
-        if (zoomLevel > 3) zoomLevel = 3;
-        if (zoomLevel < 0.2) zoomLevel = 0.2;
-        canvas.setZoom(zoomLevel);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
-    }
-
-    function drawGrid() {
-        const gridSize = 50;
-        const ctx = canvas.getContext('2d');
-        const width = canvas.getWidth();
-        const height = canvas.getHeight();
-        ctx.beginPath();
-
-        for (let i = 0; i <= width; i += gridSize) {
-            ctx.moveTo(i, 0);
-            ctx.lineTo(i, height);
-        }
-
-        for (let i = 0; i <= height; i += gridSize) {
-            ctx.moveTo(0, i);
-            ctx.lineTo(width, i);
-        }
-
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.stroke();
-    }
-
-    function toggleRuler() {
-        rulerEnabled = !rulerEnabled;
-        if (rulerEnabled) {
-            drawRulers();
-        } else {
-            clearRulers();
-        }
-    }
-
-    function drawRulers() {
-        clearRulers();
-
-        // Draw horizontal ruler
-        const hRuler = document.createElement('canvas');
-        hRuler.id = 'h-ruler';
-        hRuler.width = canvas.getWidth();
-        hRuler.height = 20;
-        hRuler.style.position = 'absolute';
-        hRuler.style.top = '0';
-        hRuler.style.left = '20px';
-        const hCtx = hRuler.getContext('2d');
-        document.body.appendChild(hRuler);
-
-        for (let i = 0; i < canvas.getWidth(); i += 10) {
-            hCtx.beginPath();
-            hCtx.moveTo(i, 0);
-            hCtx.lineTo(i, i % 50 === 0 ? 20 : 10);
-            hCtx.strokeStyle = '#000';
-            hCtx.stroke();
-            if (i % 50 === 0) {
-                hCtx.fillText(convertUnits(i), i + 2, 10);
-            }
-        }
-
-        // Draw vertical ruler
-        const vRuler = document.createElement('canvas');
-        vRuler.id = 'v-ruler';
-        vRuler.width = 20;
-        vRuler.height = canvas.getHeight();
-        vRuler.style.position = 'absolute';
-        vRuler.style.top = '20px';
-        vRuler.style.left = '0';
-        const vCtx = vRuler.getContext('2d');
-        document.body.appendChild(vRuler);
-
-        for (let i = 0; i < canvas.getHeight(); i += 10) {
-            vCtx.beginPath();
-            vCtx.moveTo(0, i);
-            vCtx.lineTo(i % 50 === 0 ? 20 : 10, i);
-            vCtx.strokeStyle = '#000';
-            vCtx.stroke();
-            if (i % 50 === 0) {
-                vCtx.fillText(convertUnits(i), 2, i + 10);
-            }
-        }
-    }
-
-    function clearRulers() {
-        const hRuler = document.getElementById('h-ruler');
-        const vRuler = document.getElementById('v-ruler');
-        if (hRuler) hRuler.remove();
-        if (vRuler) vRuler.remove();
-    }
-
-    function updateUnit() {
-        currentUnit = unitSelect.value;
-        drawRulers();
-        canvas.renderAll();
-    }
-
-    function showObjectInfo(e) {
-        const obj = e.target;
-        objectInfo.style.display = 'block';
-        objectInfo.style.left = `${obj.left + obj.width * obj.scaleX + 10}px`;
-        objectInfo.style.top = `${obj.top}px`;
-        objectInfo.innerHTML = `
-            <p>Width: ${convertUnits(obj.width * obj.scaleX)}</p>
-            <p>Height: ${convertUnits(obj.height * obj.scaleY)}</p>
-            <p>Angle: ${obj.angle.toFixed(2)}°</p>
-            <p>Left: ${convertUnits(obj.left)}</p>
-            <p>Top: ${convertUnits(obj.top)}</p>
-        `;
-    }
-
-    function hideObjectInfo() {
-        objectInfo.style.display = 'none';
-    }
-
-    function convertUnits(value) {
-        switch (currentUnit) {
-            case 'px':
-                return `${value.toFixed(2)} px`;
-            case 'mm':
-                return `${(value / 3.7795275591).toFixed(2)} mm`;
-            case 'cm':
-                return `${(value / 37.795275591).toFixed(2)} cm`;
-            default:
-                return `${value.toFixed(2)} px`;
-        }
-    }
+  
 });
