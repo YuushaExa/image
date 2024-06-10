@@ -281,27 +281,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-     const grid = 200; // Adjust the grid size as needed
-    const inset = 100; // Adjust the inset value as needed
-
-    // Add vertical and horizontal grid lines with labels
-    for (var i = 0; i < (600 / grid); i++) {
-        // Vertical grid lines with labels
-        canvas.add(new fabric.Text(String(i * 5), {
-            left: inset + i * grid,
-            top: 0,
-            fontSize: 14,
-            selectable: false
-        }));
-
-        // Horizontal grid lines with labels
-        canvas.add(new fabric.Text(String(i * 5), {
-            left: 0,
-            top: inset + i * grid,
-            fontSize: 14,
-            textAlign: 'right',
-            selectable: false
-        }));
-    }
     
 });
