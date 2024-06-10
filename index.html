@@ -9,13 +9,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>Web Lightroom Copy</h1>
-        <input type="file" id="upload" accept="image/*">
-        <div id="drop-area">
-            <p>Drag & Drop an image here or click to upload</p>
-            <canvas id="canvas"></canvas>
-        </div>
-        <div class="controls">
+        <div class="sidebar">
+            <h1>Web Lightroom Copy</h1>
+            <input type="file" id="upload" accept="image/*">
+            <div id="drop-area">
+                <p>Drag & Drop an image here or click to upload</p>
+            </div>
             <label for="image-url">Image URL</label>
             <input type="text" id="image-url" placeholder="Enter image URL">
             <button id="load-url">Submit</button>
@@ -54,6 +53,9 @@
             </div>
 
             <button id="crop-btn">Crop</button>
+        </div>
+        <div class="main-content">
+            <canvas id="canvas"></canvas>
         </div>
     </div>
     <script src="script.js"></script>
