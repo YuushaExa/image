@@ -10,11 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageHeightInput = document.getElementById('image-height');
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
+    const objectInfo = document.getElementById('objectInfo');
+
 
     let imgInstance;
     let isCropping = false;
     let cropRect;
-    let zoomLevel = 1;
 
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
@@ -26,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     canvasHeightInput.addEventListener('input', updateCanvasSize);
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
-    canvas.on('mouse:wheel', handleMouseWheel);
 
     const controls = ['brightness', 'contrast', 'saturation'];
     controls.forEach(control => {
@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.renderAll();
             updateImageSizeInputs();
             updateCanvasSizeInputs();
-            drawGrid();
         });
     }
 
