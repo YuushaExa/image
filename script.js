@@ -293,6 +293,44 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
         }
+
+        // Ruler
+
+        function createRuler() {
+      var ruler = new fabric.Rect({
+        width: 200,
+        height: 20,
+        fill: 'lightgray'
+      });
+
+      var unit = document.querySelector('input[name="unit"]:checked').value;
+      var text = new fabric.Text('Ruler (' + unit + ')', {
+        left: 5,
+        top: 2,
+        fontSize: 12
+      });
+
+      var group = new fabric.Group([ruler, text], {
+        left: 10,
+        top: 10,
+        selectable: false
+      });
+
+      canvas.add(group);
+    }
+
+    // Event listener for unit selection change
+    var unitButtons = document.getElementsByName('unit');
+    Array.from(unitButtons).forEach(function(button) {
+      button.addEventListener('change', function() {
+        canvas.clear();
+        createRuler();
+      });
+    });
+
+    // Initial ruler creation
+    createRuler();
+        
     });
     
 });
