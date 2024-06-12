@@ -297,39 +297,378 @@ document.addEventListener('DOMContentLoaded', function() {
 
  // Ruler
 
-        function createRuler() {
-      var ruler = new fabric.Rect({
-        width: 200,
-        height: 20,
-        fill: 'lightgray'
-      });
+    var canvas = new fabric.Canvas('canvas');
+var rectangle = new fabric.Rect({
+  fill: 'transparent',
+  stroke: 'black',
+  strokeWidth: 2,
+  top: 60,
+  left: 60,
+  width: 600,
+  height: 300,
+  selectable: false
+});
+var pins = [];
+var outerCircle = new fabric.Circle({
+  radius: 7.5,
+  fill: 'transparent',
+  stroke: 'black',
+  strokeWidth: 2
+});
+pins.push(outerCircle);
+var innerCircle = new fabric.Circle({
+  radius: 5,
+  fill: 'transparent',
+  stroke: 'black',
+  strokeWidth: 2,
+  top: 2.5,
+  left: 2.5
+});
+pins.push(innerCircle);
+var pinTopLeft = new fabric.Group(pins, {
+  top: 67.5,
+  left: 67.5,
+  selectable: false
+});
+var pinTopRight = new fabric.Group(pins, {
+  top: 67.5,
+  left: rectangle.width + rectangle.left - 22.5,
+  selectable: false
+});
+var pinBottomLeft = new fabric.Group(pins, {
+  top: rectangle.height + rectangle.top - 22.5,
+  left: 67.5,
+  selectable: false
+});
+var pinBottomRight = new fabric.Group(pins, {
+  top: rectangle.height + rectangle.top - 22.5,
+  left: rectangle.width + rectangle.left - 22.5,
+  selectable: false
+});
+var textSample = new fabric.Text('GORAN', {
+  top: 170,
+  left: 220,
+  scaleX: 2,
+  scaleY: 2
+});
+canvas.add(rectangle, pinTopLeft, pinTopRight, pinBottomLeft, pinBottomRight, textSample);
+canvas.setActiveObject(textSample);
+/* ZOOM FUNCTIONS */
+$('#zoomIn').click(function() {
+  rectangle.set({
+    width: rectangle.width * 1.1,
+    height: rectangle.height * 1.1
+  });
+  rectangle.setCoords();
+  textSample.set({
+    top: 60 + (textSample.top - 60) * 1.1,
+    left: 60 + (textSample.left - 60) * 1.1,
+    scaleX: textSample.scaleX * 1.1,
+    scaleY: textSample.scaleY * 1.1
+  });
+  textSample.setCoords();
+  setPins();
+  addLeftRuler();
+  addTopRuler();
+  resizeCanvas();
+});
+$('#zoomOut').click(function() {
+  rectangle.set({
+    width: rectangle.width / 1.1,
+    height: rectangle.height / 1.1
+  });
+  rectangle.setCoords();
+  textSample.set({
+    top: 60 + (textSample.top - 60) / 1.1,
+    left: 60 + (textSample.left - 60) / 1.1,
+    scaleX: textSample.scaleX / 1.1,
+    scaleY: textSample.scaleY / 1.1
+  })
+  textSample.setCoords();
+  setPins();
+  addLeftRuler();
+  addTopRuler();
+  resizeCanvas();
+});
 
-      var unit = document.querySelector('input[name="unit"]:checked').value;
-      var text = new fabric.Text('Ruler (' + unit + ')', {
-        left: 5,
-        top: 2,
-        fontSize: 12
-      });
+var topRuler;
+var addTopRuler = function() {
+  canvas.remove(topRuler);
+  var ruler = [];
+  var rect = new fabric.Rect({
+    fill: 'white',
+    stroke: 'black',
+    strokeWidth: 2,
+    width: 2100,
+    height: 40,
+  });
+  ruler.push(rect);
+  var line = new fabric.Line(
+    [60, 0, 60, 30], {
+      strokeWidth: 2,
+      stroke: 'black'
+    }
+  );
+  ruler.push(line);
+  var number = new fabric.Text('0', {
+    scaleX: 0.5,
+    scaleY: 0.5,
+    top: 18,
+    left: 68
+  });
+  ruler.push(number);
+  canvas.add(line);
+  var markerSpacing = rectangle.height / 24;
+  for (var i = 0; i < 144; i++) {
+    var newLine = line.clone();
+    newLine.set({
+      x1: 60 + (markerSpacing * (i + 1)),
+      y1: 0,
+      x2: 60 + (markerSpacing * (i + 1)),
+      y2: 15,
+      strokeWidth: 1,
+      stroke: 'black'
+    });
+    if (((i + 1) % 6) == 0) {
+      if (((i + 1) % 12) == 0) {
+        newLine.set({
+          y2: 30,
+          strokeWidth: 2
+        });
+        var number = new fabric.Text(((i + 1) / 12).toString(), {
+          scaleX: 0.5,
+          scaleY: 0.5,
+          top: 18,
+          left: 68 + (markerSpacing * (i + 1))
+        });
+        ruler.push(number);
+      } else {
+        newLine.set({
+          y2: 20,
+          strokeWidth: 2
+        });
+      }
+    }
+    ruler.push(newLine);
+  }
+  topRuler = new fabric.Group(ruler, {
+    top: $('.workspace').scrollTop(),
+    selectable: false
+  });
+  canvas.add(topRuler);
+  canvas.renderAll();
+}
+addTopRuler();
 
-      var group = new fabric.Group([ruler, text], {
-        left: 10,
-        top: 10,
-        selectable: false
-      });
+var leftRuler;
+var addLeftRuler = function() {
+  canvas.remove(leftRuler);
+  var ruler = [];
+  var rect = new fabric.Rect({
+    fill: 'white',
+    stroke: 'black',
+    strokeWidth: 2,
+    width: 40,
+    height: 800,
+  });
+  ruler.push(rect);
+  var line = new fabric.Line(
+    [0, 20, 30, 20], {
+      strokeWidth: 2,
+      stroke: 'black'
+    }
+  );
+  ruler.push(line);
+  var number = new fabric.Text('0', {
+    scaleX: 0.5,
+    scaleY: 0.5,
+    top: 25,
+    left: 23
+  });
+  ruler.push(number);
+  canvas.add(line);
+  var markerSpacing = rectangle.height / 24;
+  for (var i = 0; i < 60; i++) {
+    var newLine = line.clone();
+    newLine.set({
+      x1: 0,
+      x2: 15,
+      y1: 20 + (markerSpacing * (i + 1)),
+      y2: 20 + (markerSpacing * (i + 1)),
+      strokeWidth: 1,
+      stroke: 'black'
+    });
+    if (((i + 1) % 6) == 0) {
+      if (((i + 1) % 12) == 0) {
+        newLine.set({
+          x2: 30,
+          strokeWidth: 2
+        });
+        var number = new fabric.Text(((i + 1) / 12).toString(), {
+          scaleX: 0.5,
+          scaleY: 0.5,
+          top: 25 + (markerSpacing * (i + 1)),
+          left: 23
+        });
+        ruler.push(number);
+      } else {
+        newLine.set({
+          x2: 20 / canvas.getZoom(),
+          strokeWidth: 2 / canvas.getZoom()
+        });
+      }
+    }
+    ruler.push(newLine);
+  }
+  leftRuler = new fabric.Group(ruler, {
+    top: 40,
+    left: $('.workspace').scrollLeft(),
+    selectable: false
+  });
+  canvas.add(leftRuler);
+  canvas.renderAll();
+}
+addLeftRuler();
 
-      canvas.add(group);
+var setPins = function() {
+  pinTopRight.set({
+    left: rectangle.width + rectangle.left - 22.5
+  });
+  pinBottomLeft.set({
+    top: rectangle.height + rectangle.top - 22.5
+  });
+  pinBottomRight.set({
+    top: rectangle.height + rectangle.top - 22.5,
+    left: rectangle.width + rectangle.left - 22.5
+  });
+}
+
+$('.workspace').scroll(function() {
+  leftRuler.set({
+    left: $('.workspace').scrollLeft()
+  });
+  topRuler.set({
+    top: $('.workspace').scrollTop()
+  });
+  canvas.renderAll();
+});
+
+var panningOn = false;
+$('#toggle').click(function() {
+  $('.workspace').removeClass('dragscroll');
+  panningOn = !panningOn;
+  textSample.selectable = !panningOn;
+  canvas.selection = !panningOn;
+  canvas.defaultCursor = 'default';
+  $('#toggle').html('Turn Panning ON');
+  if (panningOn) {
+    $('.workspace').addClass('dragscroll');
+    $('#toggle').html('Turn Panning OFF');
+    canvas.defaultCursor = 'move';
+  }
+  dragscroll.reset();
+});
+
+window.addEventListener('resize', resizeCanvas, false);
+
+function resizeCanvas() {
+  if (rectangle.width + 80 > $('.workspace').width()) {
+    $('.workspace').css('overflow-x', 'scroll');
+    canvas.setWidth(rectangle.width + 80);
+  } else {
+    $('.workspace').css('overflow-x', 'hidden');
+    canvas.setWidth($('.workspace').width() - 20);
+  }
+  if (rectangle.height + 80 > $('.workspace').height()) {
+    $('.workspace').css('overflow-y', 'scroll');
+    canvas.setHeight(rectangle.height + 80);
+  } else {
+    $('.workspace').css('overflow-y', 'hidden');
+    canvas.setHeight($('.workspace').height() - 20);
+  }
+  canvas.renderAll();
+}
+
+resizeCanvas();
+
+// **** Code from here to the end comes from, https://github.com/asvd/dragscroll ****
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(['exports'], factory);
+  } else if (typeof exports !== 'undefined') {
+    factory(exports);
+  } else {
+    factory((root.dragscroll = {}));
+  }
+}(this, function(exports) {
+  var _window = window;
+  var _document = document;
+  var mousemove = 'mousemove';
+  var mouseup = 'mouseup';
+  var mousedown = 'mousedown';
+  var EventListener = 'EventListener';
+  var addEventListener = 'add' + EventListener;
+  var removeEventListener = 'remove' + EventListener;
+  var newScrollX, newScrollY;
+  var dragged = [];
+  var reset = function(i, el) {
+    for (i = 0; i < dragged.length;) {
+      el = dragged[i++];
+      el = el.container || el;
+      el[removeEventListener](mousedown, el.md, 0);
+      _window[removeEventListener](mouseup, el.mu, 0);
+      _window[removeEventListener](mousemove, el.mm, 0);
     }
 
-    // Event listener for unit selection change
-    var unitButtons = document.getElementsByName('unit');
-    Array.from(unitButtons).forEach(function(button) {
-      button.addEventListener('change', function() {
-        canvas.clear();
-        createRuler();
-      });
-    });
+    // cloning into array since HTMLCollection is updated dynamically
+    dragged = [].slice.call(_document.getElementsByClassName('dragscroll'));
+    for (i = 0; i < dragged.length;) {
+      (function(el, lastClientX, lastClientY, pushed, scroller, cont) {
+        (cont = el.container || el)[addEventListener](
+          mousedown,
+          cont.md = function(e) {
+            if (!el.hasAttribute('nochilddrag') ||
+              _document.elementFromPoint(
+                e.pageX, e.pageY
+              ) == cont
+            ) {
+              pushed = 1;
+              lastClientX = e.clientX;
+              lastClientY = e.clientY;
 
-    // Initial ruler creation
-    createRuler();
-    
+              e.preventDefault();
+            }
+          }, 0
+        );
+        _window[addEventListener](
+          mouseup, cont.mu = function() {
+            pushed = 0;
+          }, 0
+        );
+        _window[addEventListener](
+          mousemove,
+          cont.mm = function(e) {
+            if (pushed) {
+              (scroller = el.scroller || el).scrollLeft -=
+                newScrollX = (-lastClientX + (lastClientX = e.clientX));
+              scroller.scrollTop -=
+                newScrollY = (-lastClientY + (lastClientY = e.clientY));
+              if (el == _document.body) {
+                (scroller = _document.documentElement).scrollLeft -= newScrollX;
+                scroller.scrollTop -= newScrollY;
+              }
+            }
+          }, 0
+        );
+      })(dragged[i++]);
+    }
+  }
+  if (_document.readyState == 'complete') {
+    reset();
+  } else {
+    _window[addEventListener]('load', reset, 0);
+  }
+  exports.reset = reset;
+}));
+
 });
