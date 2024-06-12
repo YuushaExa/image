@@ -382,6 +382,18 @@ document.addEventListener('DOMContentLoaded', function() {
     var isDrawing = false;
 
     function activateSpotHealingBrush() {
+      // Get the active object (image) and make it non-selectable
+      var img = canvas.getActiveObject();
+      if (img) {
+        img.selectable = false;
+      }
+
+      // Temporarily disable object selection on the canvas
+      canvas.selection = false;
+      canvas.forEachObject(function(obj) {
+        obj.selectable = false;
+      });
+
       canvas.on('mouse:down', onMouseDown);
       canvas.on('mouse:move', onMouseMove);
       canvas.on('mouse:up', onMouseUp);
@@ -438,5 +450,4 @@ document.addEventListener('DOMContentLoaded', function() {
       // Put the modified image data back to the canvas
       ctx.putImageData(imgData, x - brushSize, y - brushSize);
     }
-    
 });
