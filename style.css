@@ -46,4 +46,30 @@ body {
 }
 canvas {
     border: 1px solid #ccc;
+                position: absolute;
+            top: 50px; /* Space for horizontal ruler */
+            left: 50px; /* Space for vertical ruler */
 }
+       #rulers {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #horizontal-ruler {
+            position: absolute;
+            top: 0;
+            left: 50px; /* Space for vertical ruler */
+            right: 0;
+            height: 50px;
+            background: #f0f0f0;
+        }
+
+        #vertical-ruler {
+            position: absolute;
+            top: 50px; /* Space for horizontal ruler */
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            background: #f0f0f0;
+        }
