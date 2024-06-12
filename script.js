@@ -297,7 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
  // Ruler
 
-    var canvas = new fabric.Canvas('canvas');
 var rectangle = new fabric.Rect({
   fill: 'transparent',
   stroke: 'black',
