@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
-var spotHealingBrushButton = document.getElementById('spotHealingBrush');
+ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
     spotHealingBrushButton.addEventListener('click', activateSpotHealingBrush);
 
     var brushSizeInput = document.getElementById('brushSize');
@@ -379,15 +379,8 @@ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
       brushSize = parseInt(this.value);
     });
 
-    var isDrawing = false;
-
     function activateSpotHealingBrush() {
       console.log("Healing Brush activated");
-      // Get the active object (image) and make it non-selectable
-      var img = canvas.getActiveObject();
-      if (img) {
-        img.selectable = false;
-      }
 
       // Temporarily disable object selection on the canvas
       canvas.selection = false;
@@ -396,28 +389,12 @@ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
       });
 
       canvas.on('mouse:down', onMouseDown);
-      canvas.on('mouse:move', onMouseMove);
-      canvas.on('mouse:up', onMouseUp);
     }
 
     function onMouseDown(o) {
       console.log("Mouse down");
-      isDrawing = true;
       var pointer = canvas.getPointer(o.e);
       healImage(pointer);
-    }
-
-    function onMouseMove(o) {
-      if (!isDrawing) return;
-      console.log("Mouse move");
-      var pointer = canvas.getPointer(o.e);
-      healImage(pointer);
-    }
-
-    function onMouseUp(o) {
-      console.log("Mouse up");
-      isDrawing = false;
-      canvas.renderAll();
     }
 
     function healImage(pointer) {
@@ -432,6 +409,8 @@ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
       // Get image data from the canvas
       var imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
       var data = imgData.data;
+
+      console.log("Image data before modification:", data.slice(0, 20));
 
       // Simple average blending algorithm
       var rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
@@ -453,7 +432,12 @@ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
         data[i + 2] = bAvg;
       }
 
+      console.log("Image data after modification:", data.slice(0, 20));
+
       // Put the modified image data back to the canvas
       ctx.putImageData(imgData, x - brushSize, y - brushSize);
+
+      // Ensure canvas re-renders to show changes
+      canvas.renderAll();
     }
 });
