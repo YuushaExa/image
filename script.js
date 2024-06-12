@@ -5,77 +5,74 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadUrlButton = document.getElementById('load-url');
     const cropButton = document.getElementById('crop-btn');
     const canvasElement = document.getElementById('canvas');
-    const canvas = new fabric.Canvas('canvas', { selection: true });
+    const canvas = new fabric.Canvas('canvas');
     const imageWidthInput = document.getElementById('image-width');
     const imageHeightInput = document.getElementById('image-height');
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
     const objectInfo = document.getElementById('objectInfo');
-    const angleInput = document.getElementById('angleInput');
-    const toggleInfo = document.getElementById('toggleInfo');
+
 
     let imgInstance;
     let isCropping = false;
     let cropRect;
 
-    function initEventListeners() {
-        uploadInput.addEventListener('change', handleFileSelect);
-        dropArea.addEventListener('dragover', handleDragOver);
-        dropArea.addEventListener('drop', handleDrop);
-        dropArea.addEventListener('click', () => uploadInput.click());
-        loadUrlButton.addEventListener('click', handleImageUrl);
-        cropButton.addEventListener('click', handleCrop);
-        canvasWidthInput.addEventListener('input', updateCanvasSize);
-        canvasHeightInput.addEventListener('input', updateCanvasSize);
-        imageWidthInput.addEventListener('input', updateImageSize);
-        imageHeightInput.addEventListener('input', updateImageSize);
-        const controls = ['brightness', 'contrast', 'saturation'];
-        controls.forEach(control => {
-            const input = document.getElementById(control);
-            input.addEventListener('input', () => {
-                applyFilters();
-                updateLabel(control);
-            });
+    uploadInput.addEventListener('change', handleFileSelect);
+    dropArea.addEventListener('dragover', handleDragOver);
+    dropArea.addEventListener('drop', handleDrop);
+    dropArea.addEventListener('click', () => uploadInput.click());
+    loadUrlButton.addEventListener('click', handleImageUrl);
+    cropButton.addEventListener('click', handleCrop);
+    canvasWidthInput.addEventListener('input', updateCanvasSize);
+    canvasHeightInput.addEventListener('input', updateCanvasSize);
+    imageWidthInput.addEventListener('input', updateImageSize);
+    imageHeightInput.addEventListener('input', updateImageSize);
+
+    const controls = ['brightness', 'contrast', 'saturation'];
+    controls.forEach(control => {
+        const input = document.getElementById(control);
+        input.addEventListener('input', () => {
+            applyFilters();
+            updateLabel(control);
         });
-        canvas.on('selection:created', e => updateObjectInfo(e.selected[0]));
-        canvas.on('selection:updated', e => updateObjectInfo(e.selected[0]));
-        canvas.on('selection:cleared', () => objectInfo.innerHTML = 'Select an object to see its size, angle, and position');
-        canvas.on('object:modified', e => updateObjectInfo(e.target));
-        canvas.on('object:scaling', e => updateObjectInfo(e.target));
-        canvas.on('object:moving', e => updateObjectInfo(e.target));
-        canvas.on('object:rotating', e => updateObjectInfo(e.target));
-        angleInput.addEventListener('input', updateObjectAngle);
-        toggleInfo.addEventListener('change', toggleObjectInfo);
-    }
+    });
 
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = e => loadImage(e.target.result);
+            reader.onload = function(e) {
+                loadImage(e.target.result);
+            };
             reader.readAsDataURL(file);
         }
     }
 
     function handleDragOver(event) {
         event.preventDefault();
+        event.stopPropagation();
         dropArea.classList.add('dragover');
     }
 
     function handleDrop(event) {
         event.preventDefault();
+        event.stopPropagation();
         dropArea.classList.remove('dragover');
         const file = event.dataTransfer.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = e => loadImage(e.target.result);
+            reader.onload = function(e) {
+                loadImage(e.target.result);
+            };
             reader.readAsDataURL(file);
         }
     }
 
     function handleImageUrl() {
         const url = imageUrlInput.value;
-        if (url) loadImage(url);
+        if (url) {
+            loadImage(url);
+        }
     }
 
     function loadImage(src) {
@@ -94,13 +91,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function applyFilters() {
         if (!imgInstance) return;
+
         const brightness = parseInt(document.getElementById('brightness').value, 10);
         const contrast = parseInt(document.getElementById('contrast').value, 10);
         const saturation = parseInt(document.getElementById('saturation').value, 10);
+
         imgInstance.filters = [];
-        if (brightness !== 0) imgInstance.filters.push(new fabric.Image.filters.Brightness({ brightness: brightness / 100 }));
-        if (contrast !== 0) imgInstance.filters.push(new fabric.Image.filters.Contrast({ contrast: contrast / 100 }));
-        if (saturation !== 0) imgInstance.filters.push(new fabric.Image.filters.Saturation({ saturation: saturation / 100 }));
+
+        if (brightness !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Brightness({
+                brightness: brightness / 100
+            }));
+        }
+
+        if (contrast !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Contrast({
+                contrast: contrast / 100
+            }));
+        }
+
+        if (saturation !== 0) {
+            imgInstance.filters.push(new fabric.Image.filters.Saturation({
+                saturation: saturation / 100
+            }));
+        }
+
         imgInstance.applyFilters();
         canvas.renderAll();
     }
@@ -124,7 +139,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const width = parseInt(imageWidthInput.value, 10);
         const height = parseInt(imageHeightInput.value, 10);
         if (!isNaN(width) && !isNaN(height) && imgInstance) {
-            imgInstance.set({ scaleX: width / imgInstance.width, scaleY: height / imgInstance.height });
+            imgInstance.set({
+                scaleX: width / imgInstance.width,
+                scaleY: height / imgInstance.height
+            });
             canvas.renderAll();
         }
     }
@@ -141,34 +159,39 @@ document.addEventListener('DOMContentLoaded', function() {
         canvasHeightInput.value = canvas.getHeight();
     }
 
+    //crop
+
     function handleCrop() {
         if (!imgInstance) return;
+
         if (!isCropping) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const cropWidth = canvas.width / 2;
             const cropHeight = canvas.height / 2;
+
             cropRect = new fabric.Rect({
                 left: centerX - cropWidth / 2,
                 top: centerY - cropHeight / 2,
                 width: cropWidth,
                 height: cropHeight,
                 fill: 'rgba(0,0,0,0.3)',
-                selectable: true,
-                evented: false
+                selectable: true
             });
             canvas.add(cropRect);
-            canvas.bringToFront(cropRect);
             isCropping = true;
             cropButton.textContent = 'Confirm Crop';
         } else {
             const cropData = cropRect.getBoundingRect();
+
             const scaleX = imgInstance.scaleX || 1;
             const scaleY = imgInstance.scaleY || 1;
+
             const left = (cropData.left - imgInstance.left) / scaleX;
             const top = (cropData.top - imgInstance.top) / scaleY;
             const width = cropData.width / scaleX;
             const height = cropData.height / scaleY;
+
             const croppedImg = new Image();
             croppedImg.src = imgInstance.toDataURL({
                 left: left,
@@ -176,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 width: width,
                 height: height
             });
+
             croppedImg.onload = function() {
                 const croppedInstance = new fabric.Image(croppedImg, {
                     left: imgInstance.left,
@@ -190,14 +214,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 imgInstance = croppedInstance;
                 updateImageSizeInputs();
             };
+
             isCropping = false;
             cropButton.textContent = 'Crop';
             canvas.remove(cropRect);
         }
     }
 
-    function updateObjectInfo(object) {
-        if (toggleInfo.checked && object) {
+    // obj info
+    
+      function updateObjectInfo(object) {
+        if (toggleInfo.checked) {
             const width = object.getScaledWidth();
             const height = object.getScaledHeight();
             const angle = object.angle;
@@ -206,88 +233,67 @@ document.addEventListener('DOMContentLoaded', function() {
             objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px, Angle: ${angle.toFixed(2)}°, Position: (${left.toFixed(2)}, ${top.toFixed(2)})`;
             angleInput.value = angle.toFixed(2);
         } else {
-            objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
+            objectInfo.innerHTML = '';
         }
     }
 
-    function updateObjectAngle() {
+    // Listen for object selection
+    canvas.on('selection:created', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+
+    // Listen for object selection updates
+    canvas.on('selection:updated', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+
+    // Clear information display when object is deselected
+    canvas.on('selection:cleared', function() {
+        objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
+    });
+
+    // Listen for object modifications
+    canvas.on('object:modified', function(e) {
+        const modifiedObject = e.target;
+        updateObjectInfo(modifiedObject);
+    });
+
+    // Listen for object transformations
+    canvas.on('object:scaling', function(e) {
+        const scalingObject = e.target;
+        updateObjectInfo(scalingObject);
+    });
+
+    canvas.on('object:moving', function(e) {
+        const movingObject = e.target;
+        updateObjectInfo(movingObject);
+    });
+
+    canvas.on('object:rotating', function(e) {
+        const rotatingObject = e.target;
+        updateObjectInfo(rotatingObject);
+    });
+
+  angleInput.addEventListener('input', function() {
         const activeObject = canvas.getActiveObject();
         if (activeObject && angleInput.value !== '') {
             activeObject.set('angle', parseFloat(angleInput.value)).setCoords();
             canvas.renderAll();
             updateObjectInfo(activeObject);
         }
-    }
+    });
 
-    function toggleObjectInfo() {
+    // Toggle info display
+    toggleInfo.addEventListener('change', function() {
         const activeObject = canvas.getActiveObject();
         if (activeObject) {
             updateObjectInfo(activeObject);
         } else {
             objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
-        }
-    }
+        }   
+    });
 
-    initEventListeners();
-    canvas.setWidth(800); // Set initial canvas width
-    canvas.setHeight(600); // Set initial canvas height
-
-          const canvasContainer = document.querySelector('.canvas-container');
-            const horizontalRuler = document.getElementById('horizontal-ruler');
-            const verticalRuler = document.getElementById('vertical-ruler');
-            const RULER_UNIT = 10;
-
-            function createRulerMarks(ruler, length, horizontal = true) {
-                for (let i = 0; i < length; i += RULER_UNIT) {
-                    const mark = document.createElement('div');
-                    mark.style[horizontal ? 'left' : 'top'] = `${i}px`;
-                    mark.style[horizontal ? 'width' : 'height'] = '1px';
-                    mark.style[horizontal ? 'height' : 'width'] = '10px';
-                    mark.textContent = i;
-                    mark.style.fontSize = '10px';
-                    mark.style.textAlign = 'center';
-                    mark.style.color = '#333';
-                    mark.style[horizontal ? 'top' : 'left'] = '10px';
-                    ruler.appendChild(mark);
-                }
-            }
-
-            function updateRulers() {
-                while (horizontalRuler.firstChild) horizontalRuler.removeChild(horizontalRuler.firstChild);
-                while (verticalRuler.firstChild) verticalRuler.removeChild(verticalRuler.firstChild);
-                createRulerMarks(horizontalRuler, canvas.width, true);
-                createRulerMarks(verticalRuler, canvas.height, false);
-            }
-
-            function updateRulersPosition() {
-                const objects = canvas.getObjects();
-                for (const obj of objects) {
-                    const boundingRect = obj.getBoundingRect(true);
-                    const xMark = horizontalRuler.querySelector(`div:nth-child(${Math.floor(boundingRect.left / RULER_UNIT) + 1})`);
-                    const yMark = verticalRuler.querySelector(`div:nth-child(${Math.floor(boundingRect.top / RULER_UNIT) + 1})`);
-                    if (xMark) xMark.style.backgroundColor = 'red';
-                    if (yMark) yMark.style.backgroundColor = 'red';
-                }
-            }
-
-            canvas.on('object:moving', updateRulersPosition);
-            canvas.on('object:scaling', updateRulersPosition);
-            canvas.on('object:resizing', updateRulersPosition);
-            canvas.on('after:render', updateRulersPosition);
-
-            canvas.setWidth(800);
-            canvas.setHeight(600);
-            updateRulers();
-
-            // Example object
-            const rect = new fabric.Rect({
-                left: 100,
-                top: 100,
-                fill: 'blue',
-                width: 100,
-                height: 100
-            });
-            canvas.add(rect);
-        });
+ 
 });
-</script>
