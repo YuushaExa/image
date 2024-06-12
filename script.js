@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
     const objectInfo = document.getElementById('objectInfo');
+      const brushSizeInput = document.getElementById('brushSize');
+    let brushSize = parseInt(brushSizeInput.value);
 
 
     let imgInstance;
@@ -370,74 +372,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
- var spotHealingBrushButton = document.getElementById('spotHealingBrush');
+    function activateSpotHealingBrush() {
+        console.log("Healing Brush activated");
+
+        // Temporarily disable object selection on the canvas
+        canvas.selection = false;
+        canvas.forEachObject(function(obj) {
+            obj.selectable = false;
+        });
+
+        canvas.on('mouse:down', onMouseDown);
+    }
+
+    // Event listener for Spot Healing Brush button click
+    const spotHealingBrushButton = document.getElementById('spotHealingBrush');
     spotHealingBrushButton.addEventListener('click', activateSpotHealingBrush);
 
-    var brushSizeInput = document.getElementById('brushSize');
-    var brushSize = parseInt(brushSizeInput.value);
+    // Event listener for brush size input change
     brushSizeInput.addEventListener('input', function() {
-      brushSize = parseInt(this.value);
+        brushSize = parseInt(this.value);
     });
 
-    function activateSpotHealingBrush() {
-      console.log("Healing Brush activated");
-
-      // Temporarily disable object selection on the canvas
-      canvas.selection = false;
-      canvas.forEachObject(function(obj) {
-        obj.selectable = false;
-      });
-
-      canvas.on('mouse:down', onMouseDown);
-    }
-
+    // Mouse down event handler for Spot Healing Brush
     function onMouseDown(o) {
-      console.log("Mouse down");
-      var pointer = canvas.getPointer(o.e);
-      healImage(pointer);
+        console.log("Mouse down");
+        const pointer = canvas.getPointer(o.e);
+        healImage(pointer);
     }
 
+    // Function to apply Spot Healing Brush effect
     function healImage(pointer) {
-      var img = canvas.getActiveObject();
-      if (!img) return;
-      var ctx = canvas.getContext('2d');
-      var x = pointer.x;
-      var y = pointer.y;
+        const ctx = canvas.getContext('2d');
+        const x = pointer.x;
+        const y = pointer.y;
 
-      console.log("Healing at", x, y);
+        console.log("Healing at", x, y);
 
-      // Get image data from the canvas
-      var imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
-      var data = imgData.data;
+        // Get image data from the canvas
+        const imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
+        const data = imgData.data;
 
-      console.log("Image data before modification:", data.slice(0, 20));
+        console.log("Image data before modification:", data.slice(0, 20));
 
-      // Simple average blending algorithm
-      var rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
-      for (var i = 0; i < data.length; i += 4) {
-        rTotal += data[i];
-        gTotal += data[i + 1];
-        bTotal += data[i + 2];
-        count++;
-      }
+        // Simple average blending algorithm
+        let rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            rTotal += data[i];
+            gTotal += data[i + 1];
+            bTotal += data[i + 2];
+            count++;
+        }
 
-      var rAvg = rTotal / count;
-      var gAvg = gTotal / count;
-      var bAvg = bTotal / count;
+        const rAvg = rTotal / count;
+        const gAvg = gTotal / count;
+        const bAvg = bTotal / count;
 
-      // Apply the average color to the brush area
-      for (var i = 0; i < data.length; i += 4) {
-        data[i] = rAvg;
-        data[i + 1] = gAvg;
-        data[i + 2] = bAvg;
-      }
+        // Apply the average color to the brush area
+        for (let i = 0; i < data.length; i += 4) {
+            data[i] = rAvg;
+            data[i + 1] = gAvg;
+            data[i + 2] = bAvg;
+        }
 
-      console.log("Image data after modification:", data.slice(0, 20));
+        console.log("Image data after modification:", data.slice(0, 20));
 
-      // Put the modified image data back to the canvas
-      ctx.putImageData(imgData, x - brushSize, y - brushSize);
+        // Put the modified image data back to the canvas
+        ctx.putImageData(imgData, x - brushSize, y - brushSize);
 
-      // Ensure canvas re-renders to show changes
-      canvas.renderAll();
+        // Ensure canvas re-renders to show changes
+        canvas.renderAll();
     }
 });
