@@ -296,6 +296,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
  // Ruler
+const markings = [];
+const rulerHeight = 30; // Height of the ruler in pixels
+const markingInterval = 10; // Interval between each marking in pixels
 
+for (let i = 0; i <= canvas.width; i += markingInterval) {
+  const marking = new fabric.Rect({
+    width: 1,
+    height: rulerHeight / 2,
+    top: 0,
+    left: i,
+    fill: '#999',
+    selectable: false,
+  });
+  markings.push(marking);
+}
+
+canvas.add(...markings);
+    const labelInterval = 50; // Interval between each label in pixels
+
+for (let i = 0; i <= canvas.width; i += labelInterval) {
+  const label = new fabric.Text(`${i}px`, {
+    top: rulerHeight / 2,
+    left: i + 2,
+    fontSize: 10,
+    selectable: false,
+  });
+  canvas.add(label);
+}
+    canvas.on('object:scaling', (event) => {
+  const { scaleX } = event.target;
+  const ruler = document.getElementById('ruler');
+  ruler.style.transform = `scaleX(${scaleX})`;
+});
+    function updateRuler() {
+  const ruler = document.getElementById('ruler');
+  ruler.style.width = `${canvas.width}px`;
+}
+
+canvas.on('after:render', updateRuler);
+window.addEventListener('resize', updateRuler);
 
 });
