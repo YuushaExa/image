@@ -379,7 +379,7 @@ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
       brushSize = parseInt(this.value);
     });
 
-    var isDrawing = true;
+    var isDrawing = false;
 
     function activateSpotHealingBrush() {
       console.log("Healing Brush activated");
