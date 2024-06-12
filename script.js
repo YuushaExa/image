@@ -367,4 +367,80 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', updateCanvasSize);
 
     updateCanvasSize();
+
+    // healing
+
+    var spotHealingBrushButton = document.getElementById('spotHealingBrush');
+    spotHealingBrushButton.addEventListener('click', activateSpotHealingBrush);
+
+    var brushSizeInput = document.getElementById('brushSize');
+    var brushSize = parseInt(brushSizeInput.value);
+    brushSizeInput.addEventListener('input', function() {
+      brushSize = parseInt(this.value);
+    });
+
+    var isDrawing = false;
+    var imgData;
+
+    function activateSpotHealingBrush() {
+      canvas.on('mouse:down', onMouseDown);
+      canvas.on('mouse:move', onMouseMove);
+      canvas.on('mouse:up', onMouseUp);
+    }
+
+    function onMouseDown(o) {
+      isDrawing = true;
+      var pointer = canvas.getPointer(o.e);
+      imgData = getImageData(pointer);
+    }
+
+    function onMouseMove(o) {
+      if (!isDrawing) return;
+      var pointer = canvas.getPointer(o.e);
+      healImage(pointer);
+    }
+
+    function onMouseUp(o) {
+      isDrawing = false;
+      canvas.renderAll();
+    }
+
+    function getImageData(pointer) {
+      var img = canvas.getActiveObject();
+      var ctx = canvas.getContext('2d');
+      return ctx.getImageData(pointer.x - brushSize, pointer.y - brushSize, brushSize * 2, brushSize * 2);
+    }
+
+    function healImage(pointer) {
+      var img = canvas.getActiveObject();
+      var ctx = canvas.getContext('2d');
+      var data = imgData.data;
+
+      // Improved healing algorithm: using a weighted average of surrounding pixels
+      for (var i = 0; i < data.length; i += 4) {
+        var r = 0, g = 0, b = 0, weightSum = 0;
+        for (var x = -brushSize; x <= brushSize; x++) {
+          for (var y = -brushSize; y <= brushSize; y++) {
+            var distance = Math.sqrt(x * x + y * y);
+            var weight = Math.max(0, brushSize - distance);
+            var px = pointer.x + x;
+            var py = pointer.y + y;
+
+            if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+              var pixel = ctx.getImageData(px, py, 1, 1).data;
+              r += pixel[0] * weight;
+              g += pixel[1] * weight;
+              b += pixel[2] * weight;
+              weightSum += weight;
+            }
+          }
+        }
+        data[i] = r / weightSum;
+        data[i + 1] = g / weightSum;
+        data[i + 2] = b / weightSum;
+      }
+
+      ctx.putImageData(imgData, pointer.x - brushSize, pointer.y - brushSize);
+    }
+    
 });
