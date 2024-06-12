@@ -7,7 +7,7 @@ body {
     height: 100vh;
 }
 .sidebar {
-    width: 250px;
+    width: 10%;
     padding: 20px;
     background: #f7f7f7;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
@@ -43,6 +43,7 @@ body {
     align-items: center;
     background: #fff;
     position: relative;
+    width:90%
 }
 canvas {
     border: 1px solid #ccc;
