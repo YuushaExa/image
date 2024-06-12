@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
-    var spotHealingBrushButton = document.getElementById('spotHealingBrush');
+ var spotHealingBrushButton = document.getElementById('spotHealingBrush');
     spotHealingBrushButton.addEventListener('click', activateSpotHealingBrush);
 
     var brushSizeInput = document.getElementById('brushSize');
@@ -380,7 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var isDrawing = false;
-    var imgData;
 
     function activateSpotHealingBrush() {
       canvas.on('mouse:down', onMouseDown);
@@ -391,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function onMouseDown(o) {
       isDrawing = true;
       var pointer = canvas.getPointer(o.e);
-      imgData = getImageData(pointer);
+      healImage(pointer);
     }
 
     function onMouseMove(o) {
@@ -405,42 +404,39 @@ document.addEventListener('DOMContentLoaded', function() {
       canvas.renderAll();
     }
 
-    function getImageData(pointer) {
-      var img = canvas.getActiveObject();
-      var ctx = canvas.getContext('2d');
-      return ctx.getImageData(pointer.x - brushSize, pointer.y - brushSize, brushSize * 2, brushSize * 2);
-    }
-
     function healImage(pointer) {
       var img = canvas.getActiveObject();
+      if (!img) return;
       var ctx = canvas.getContext('2d');
+      var x = pointer.x;
+      var y = pointer.y;
+
+      // Get image data from the canvas
+      var imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
       var data = imgData.data;
 
-      // Improved healing algorithm: using a weighted average of surrounding pixels
+      // Simple average blending algorithm
+      var rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
       for (var i = 0; i < data.length; i += 4) {
-        var r = 0, g = 0, b = 0, weightSum = 0;
-        for (var x = -brushSize; x <= brushSize; x++) {
-          for (var y = -brushSize; y <= brushSize; y++) {
-            var distance = Math.sqrt(x * x + y * y);
-            var weight = Math.max(0, brushSize - distance);
-            var px = pointer.x + x;
-            var py = pointer.y + y;
-
-            if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
-              var pixel = ctx.getImageData(px, py, 1, 1).data;
-              r += pixel[0] * weight;
-              g += pixel[1] * weight;
-              b += pixel[2] * weight;
-              weightSum += weight;
-            }
-          }
-        }
-        data[i] = r / weightSum;
-        data[i + 1] = g / weightSum;
-        data[i + 2] = b / weightSum;
+        rTotal += data[i];
+        gTotal += data[i + 1];
+        bTotal += data[i + 2];
+        count++;
       }
 
-      ctx.putImageData(imgData, pointer.x - brushSize, pointer.y - brushSize);
+      var rAvg = rTotal / count;
+      var gAvg = gTotal / count;
+      var bAvg = bTotal / count;
+
+      // Apply the average color to the brush area
+      for (var i = 0; i < data.length; i += 4) {
+        data[i] = rAvg;
+        data[i + 1] = gAvg;
+        data[i + 2] = bAvg;
+      }
+
+      // Put the modified image data back to the canvas
+      ctx.putImageData(imgData, x - brushSize, y - brushSize);
     }
     
 });
