@@ -292,9 +292,10 @@ document.addEventListener('DOMContentLoaded', function() {
             updateObjectInfo(activeObject);
         } else {
             objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
-        }
+        }   
+    });
 
-        // Ruler
+ // Ruler
 
         function createRuler() {
       var ruler = new fabric.Rect({
@@ -330,7 +331,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial ruler creation
     createRuler();
-        
-    });
     
 });
