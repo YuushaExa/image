@@ -7,7 +7,7 @@ body {
     height: 100vh;
 }
 .sidebar {
-    width: 10%;
+    width: 20%;
     padding: 20px;
     background: #f7f7f7;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
@@ -43,13 +43,13 @@ body {
     align-items: center;
     background: #fff;
     position: relative;
-    width:90%
+    width:80%
 }
 canvas {
     border: 1px solid #ccc;
                 position: absolute;
-            top: 50px; /* Space for horizontal ruler */
-            left: 50px; /* Space for vertical ruler */
+            top: 50px; 
+            left: 100px; 
 }
        #rulers {
             position: absolute;
