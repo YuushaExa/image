@@ -231,5 +231,63 @@ document.addEventListener('DOMContentLoaded', function() {
     initEventListeners();
     canvas.setWidth(800); // Set initial canvas width
     canvas.setHeight(600); // Set initial canvas height
+
+          const canvasContainer = document.querySelector('.canvas-container');
+            const horizontalRuler = document.getElementById('horizontal-ruler');
+            const verticalRuler = document.getElementById('vertical-ruler');
+            const RULER_UNIT = 10;
+
+            function createRulerMarks(ruler, length, horizontal = true) {
+                for (let i = 0; i < length; i += RULER_UNIT) {
+                    const mark = document.createElement('div');
+                    mark.style[horizontal ? 'left' : 'top'] = `${i}px`;
+                    mark.style[horizontal ? 'width' : 'height'] = '1px';
+                    mark.style[horizontal ? 'height' : 'width'] = '10px';
+                    mark.textContent = i;
+                    mark.style.fontSize = '10px';
+                    mark.style.textAlign = 'center';
+                    mark.style.color = '#333';
+                    mark.style[horizontal ? 'top' : 'left'] = '10px';
+                    ruler.appendChild(mark);
+                }
+            }
+
+            function updateRulers() {
+                while (horizontalRuler.firstChild) horizontalRuler.removeChild(horizontalRuler.firstChild);
+                while (verticalRuler.firstChild) verticalRuler.removeChild(verticalRuler.firstChild);
+                createRulerMarks(horizontalRuler, canvas.width, true);
+                createRulerMarks(verticalRuler, canvas.height, false);
+            }
+
+            function updateRulersPosition() {
+                const objects = canvas.getObjects();
+                for (const obj of objects) {
+                    const boundingRect = obj.getBoundingRect(true);
+                    const xMark = horizontalRuler.querySelector(`div:nth-child(${Math.floor(boundingRect.left / RULER_UNIT) + 1})`);
+                    const yMark = verticalRuler.querySelector(`div:nth-child(${Math.floor(boundingRect.top / RULER_UNIT) + 1})`);
+                    if (xMark) xMark.style.backgroundColor = 'red';
+                    if (yMark) yMark.style.backgroundColor = 'red';
+                }
+            }
+
+            canvas.on('object:moving', updateRulersPosition);
+            canvas.on('object:scaling', updateRulersPosition);
+            canvas.on('object:resizing', updateRulersPosition);
+            canvas.on('after:render', updateRulersPosition);
+
+            canvas.setWidth(800);
+            canvas.setHeight(600);
+            updateRulers();
+
+            // Example object
+            const rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                fill: 'blue',
+                width: 100,
+                height: 100
+            });
+            canvas.add(rect);
+        });
 });
 </script>
