@@ -401,45 +401,49 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to apply Spot Healing Brush effect
-    function healImage(pointer) {
-        const ctx = canvas.getContext('2d');
-        const x = pointer.x;
-        const y = pointer.y;
+function healImage(pointer) {
+    const img = canvas.getActiveObject();
+    if (!img) return; // Check if an image is selected
 
-        console.log("Healing at", x, y);
+    const ctx = canvas.getContext('2d');
+    const x = pointer.x;
+    const y = pointer.y;
 
-        // Get image data from the canvas
-        const imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
-        const data = imgData.data;
+    console.log("Healing at", x, y);
 
-        console.log("Image data before modification:", data.slice(0, 20));
+    // Get image data from the canvas
+    const imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
+    const data = imgData.data;
 
-        // Simple average blending algorithm
-        let rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
-        for (let i = 0; i < data.length; i += 4) {
-            rTotal += data[i];
-            gTotal += data[i + 1];
-            bTotal += data[i + 2];
-            count++;
-        }
+    console.log("Image data before modification:", data.slice(0, 20));
 
-        const rAvg = rTotal / count;
-        const gAvg = gTotal / count;
-        const bAvg = bTotal / count;
-
-        // Apply the average color to the brush area
-        for (let i = 0; i < data.length; i += 4) {
-            data[i] = rAvg;
-            data[i + 1] = gAvg;
-            data[i + 2] = bAvg;
-        }
-
-        console.log("Image data after modification:", data.slice(0, 20));
-
-        // Put the modified image data back to the canvas
-        ctx.putImageData(imgData, x - brushSize, y - brushSize);
-
-        // Ensure canvas re-renders to show changes
-        canvas.renderAll();
+    // Simple average blending algorithm
+    let rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+        rTotal += data[i];
+        gTotal += data[i + 1];
+        bTotal += data[i + 2];
+        count++;
     }
+
+    const rAvg = rTotal / count;
+    const gAvg = gTotal / count;
+    const bAvg = bTotal / count;
+
+    // Apply the average color to the brush area
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = rAvg;
+        data[i + 1] = gAvg;
+        data[i + 2] = bAvg;
+    }
+
+    console.log("Image data after modification:", data.slice(0, 20));
+
+    // Put the modified image data back to the canvas
+    ctx.putImageData(imgData, x - brushSize, y - brushSize);
+
+    // Ensure canvas re-renders to show changes
+    canvas.renderAll();
+}
+
 });
