@@ -1,29 +1,49 @@
-      .main-content {
-            position: relative;
-        }
-        .ruler {
-            position: absolute;
-            background-color: #f0f0f0;
-            z-index: 10;
-        }
-        .horizontal-ruler {
-            height: 20px;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-        .vertical-ruler {
-            width: 20px;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-        .canvas-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        .ruler div {
-            position: absolute;
-            background-color: #d0d0d0;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.container {
+    display: flex;
+    height: 100vh;
+}
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background: #f7f7f7;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+.sidebar h1 {
+    margin-top: 0;
+}
+#drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+.slider-container {
+    margin-bottom: 20px;
+}
+.range-ticks {
+    display: flex;
+    justify-content: space-between;
+}
+.range-ticks .tick {
+    height: 10px;
+    width: 2px;
+    background: #000;
+}
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    position: relative;
+}
+canvas {
+    border: 1px solid #ccc;
+}
