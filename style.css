@@ -51,7 +51,7 @@ canvas {
             left: 50px; /* Space for vertical ruler */
 }
        #rulers {
-            position: relative;
+            position: absolute;
             width: 100%;
             height: 100%;
         }
