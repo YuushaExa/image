@@ -390,9 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Temporarily disable object selection on the canvas
       canvas.selection = false;
-      canvas.forEachObject(function(obj) {
-        obj.selectable = false;
-      });
+
 
       canvas.on('mouse:down', onMouseDown);
       canvas.on('mouse:move', onMouseMove);
