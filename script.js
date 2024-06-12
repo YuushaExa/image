@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
- var spotHealingBrushButton = document.getElementById('spotHealingBrush');
+var spotHealingBrushButton = document.getElementById('spotHealingBrush');
     spotHealingBrushButton.addEventListener('click', activateSpotHealingBrush);
 
     var brushSizeInput = document.getElementById('brushSize');
@@ -379,9 +379,10 @@ document.addEventListener('DOMContentLoaded', function() {
       brushSize = parseInt(this.value);
     });
 
-    var isDrawing = false;
+    var isDrawing = true;
 
     function activateSpotHealingBrush() {
+      console.log("Healing Brush activated");
       // Get the active object (image) and make it non-selectable
       var img = canvas.getActiveObject();
       if (img) {
@@ -390,7 +391,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Temporarily disable object selection on the canvas
       canvas.selection = false;
-
+      canvas.forEachObject(function(obj) {
+        obj.selectable = false;
+      });
 
       canvas.on('mouse:down', onMouseDown);
       canvas.on('mouse:move', onMouseMove);
@@ -398,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function onMouseDown(o) {
+      console.log("Mouse down");
       isDrawing = true;
       var pointer = canvas.getPointer(o.e);
       healImage(pointer);
@@ -405,11 +409,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function onMouseMove(o) {
       if (!isDrawing) return;
+      console.log("Mouse move");
       var pointer = canvas.getPointer(o.e);
       healImage(pointer);
     }
 
     function onMouseUp(o) {
+      console.log("Mouse up");
       isDrawing = false;
       canvas.renderAll();
     }
@@ -420,6 +426,8 @@ document.addEventListener('DOMContentLoaded', function() {
       var ctx = canvas.getContext('2d');
       var x = pointer.x;
       var y = pointer.y;
+
+      console.log("Healing at", x, y);
 
       // Get image data from the canvas
       var imgData = ctx.getImageData(x - brushSize, y - brushSize, brushSize * 2, brushSize * 2);
