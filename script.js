@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasHeightInput = document.getElementById('canvas-height');
     const objectInfo = document.getElementById('objectInfo');
 
+        const healButton = document.getElementById('healButton');
+
   const ctx = canvas.getContext('2d');
     let imgData = null;
     let img = new Image();
