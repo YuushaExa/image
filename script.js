@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
- healButton.addEventListener('click', function() {
+    healButton.addEventListener('click', function() {
         healingMode = !healingMode;
         canvas.isDrawingMode = false; // Ensure Fabric.js drawing mode is off
         healButton.textContent = healingMode ? 'Cancel Healing' : 'Spot Healing Brush';
@@ -401,20 +401,27 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('path:created', function(event) {
         if (healingMode) {
             const path = event.path;
-            const points = path.path;
-
-            points.forEach(point => {
-                const [x, y] = point.slice(1);
-                brushStrokes.push({ x, y });
-            });
-
-            canvas.remove(path); // Remove the temporary drawing
+            if (path && path.path) {
+                const points = path.path;
+                points.forEach(point => {
+                    const [cmd, x, y] = point;
+                    if (cmd && x && y) {
+                        brushStrokes.push({ x, y });
+                    }
+                });
+                canvas.remove(path); // Remove the temporary drawing
+            }
             canvas.isDrawingMode = false;
         }
     });
 
     // Apply Healing using OpenCV.js
     function applyHealing() {
+        if (!brushStrokes || brushStrokes.length === 0) {
+            console.error('No brush strokes to apply healing');
+            return;
+        }
+
         const canvasWidth = canvas.getWidth();
         const canvasHeight = canvas.getHeight();
         imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -443,5 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
             brushStrokes = [];
         };
     }
+
 
 });
