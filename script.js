@@ -11,8 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasWidthInput = document.getElementById('canvas-width');
     const canvasHeightInput = document.getElementById('canvas-height');
     const objectInfo = document.getElementById('objectInfo');
-      const brushSizeInput = document.getElementById('brushSize');
-    let brushSize = parseInt(brushSizeInput.value);
+
 
 
     let imgInstance;
@@ -372,6 +371,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
+document.getElementById('healButton').addEventListener('click', function() {
+        if (!imgData) return;
 
+        // Load OpenCV.js and perform spot healing
+        cv.onRuntimeInitialized = () => {
+            console.log('OpenCV.js is ready');
+            spotHealImage();
+        };
+
+        function spotHealImage() {
+            // Convert image data to OpenCV Mat
+            let src = cv.matFromImageData(imgData);
+
+            // Perform spot healing (e.g., inpainting)
+            let dst = new cv.Mat();
+            let mask = new cv.Mat();
+            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+
+            // You may need to adjust the parameters for inpainting based on your requirements
+            cv.inpaint(src, mask, dst, 3, cv.INPAINT_TELEA);
+
+            // Convert OpenCV Mat back to ImageData
+            let resultImageData = new ImageData(
+                new Uint8ClampedArray(dst.data),
+                src.cols,
+                src.rows
+            );
+
+            // Display the result on the canvas
+            ctx.putImageData(resultImageData, 0, 0);
+
+            // Clean up
+            src.delete();
+            dst.delete();
+            mask.delete();
+        }
+    });
 
 });
