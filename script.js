@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let healingMode = false;
     let brushStrokes = [];
 
-    let imgInstance;
     let isCropping = false;
     let cropRect;
 
