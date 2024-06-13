@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const healButton = document.getElementById('healButton');
 
   const ctx = canvas.getContext('2d');
-    let imgData = null;
     let img = new Image();
       let imgInstance, imgData;
     let healingMode = false;
