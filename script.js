@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const ctx = canvas.getContext('2d');
     let imgData = null;
     let img = new Image();
+      let imgInstance, imgData;
+    let healingMode = false;
+    let brushStrokes = [];
 
     let imgInstance;
     let isCropping = false;
@@ -373,42 +376,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
-document.getElementById('healButton').addEventListener('click', function() {
-        if (!imgData) return;
+    healButton.addEventListener('click', function() {
+        healingMode = !healingMode;
+        canvas.isDrawingMode = healingMode;
+        healButton.textContent = healingMode ? 'Cancel Healing' : 'Spot Healing Brush';
 
-        // Load OpenCV.js and perform spot healing
+        if (!healingMode && brushStrokes.length > 0) {
+            applyHealing();
+        }
+    });
+
+    // Capture Brush Strokes
+    canvas.on('mouse:down', function(o) {
+        if (!healingMode) return;
+        const pointer = canvas.getPointer(o.e);
+        brushStrokes.push({ x: pointer.x, y: pointer.y });
+    });
+
+    // Apply Healing using OpenCV.js
+    function applyHealing() {
+        const canvasWidth = canvas.getWidth();
+        const canvasHeight = canvas.getHeight();
+        imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+
         cv.onRuntimeInitialized = () => {
-            console.log('OpenCV.js is ready');
-            spotHealImage();
-        };
+            const src = cv.matFromImageData(imgData);
+            const dst = new cv.Mat();
+            const mask = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
 
-        function spotHealImage() {
-            // Convert image data to OpenCV Mat
-            let src = cv.matFromImageData(imgData);
+            brushStrokes.forEach(point => {
+                cv.circle(mask, new cv.Point(point.x, point.y), 10, new cv.Scalar(255, 255, 255), -1);
+            });
 
-            // Perform spot healing (e.g., inpainting)
-            let dst = new cv.Mat();
-            let mask = new cv.Mat();
-            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-
-            // You may need to adjust the parameters for inpainting based on your requirements
             cv.inpaint(src, mask, dst, 3, cv.INPAINT_TELEA);
 
-            // Convert OpenCV Mat back to ImageData
             let resultImageData = new ImageData(
                 new Uint8ClampedArray(dst.data),
-                src.cols,
-                src.rows
+                dst.cols,
+                dst.rows
             );
-
-            // Display the result on the canvas
             ctx.putImageData(resultImageData, 0, 0);
 
-            // Clean up
             src.delete();
             dst.delete();
             mask.delete();
-        }
-    });
+            brushStrokes = [];
+        };
+    }
 
 });
