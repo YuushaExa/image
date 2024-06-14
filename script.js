@@ -374,11 +374,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateCanvasSize();
     
-});
+
 
 // healing
 
- document.addEventListener('DOMContentLoaded', () => {
             const upload = document.getElementById('upload');
             const healToolButton = document.getElementById('healToolButton');
             const cursorTypeInput = document.getElementById('cursorType');
