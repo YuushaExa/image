@@ -1,18 +1,4 @@
- 
-    const canvasElement = document.getElementById('canvas');
-    
-    const imageWidthInput = document.getElementById('image-width');
-    const imageHeightInput = document.getElementById('image-height');
-    const canvasWidthInput = document.getElementById('canvas-width');
-    const canvasHeightInput = document.getElementById('canvas-height');
- 
-
-  
-
-const horizontalRuler = document.getElementById('horizontal-ruler');
-    const verticalRuler = document.getElementById('vertical-ruler');
-
-    function drawRulers() {
+     function drawRulers() {
         drawHorizontalRuler();
         drawVerticalRuler();
     }
