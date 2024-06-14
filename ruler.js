@@ -8,10 +8,6 @@
  
 
   
-    canvasWidthInput.addEventListener('input', updateCanvasSize);
-    canvasHeightInput.addEventListener('input', updateCanvasSize);
-    imageWidthInput.addEventListener('input', updateImageSize);
-    imageHeightInput.addEventListener('input', updateImageSize);
 
 const horizontalRuler = document.getElementById('horizontal-ruler');
     const verticalRuler = document.getElementById('vertical-ruler');
