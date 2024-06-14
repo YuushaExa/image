@@ -2,6 +2,14 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
 }
+
+        .cursor {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid red;
+            pointer-events: none;
+            display: none;
+        }
 .container {
     display: flex;
     height: 100vh;
@@ -45,7 +53,7 @@ body {
     position: relative;
     width:80%
 }
-canvas {
+#canvas {
     border: 1px solid #ccc;
                 position: absolute;
             top: 50px; 
