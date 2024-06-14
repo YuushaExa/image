@@ -51,17 +51,4 @@
         }
     }
 
-    function updateCanvasSize() {
-        const canvasElement = canvas.getElement();
-        const width = window.innerWidth - 100; // Adjust for ruler size
-        const height = window.innerHeight - 100; // Adjust for ruler size
-        canvasElement.width = width;
-        canvasElement.height = height;
-        canvas.setWidth(width);
-        canvas.setHeight(height);
-        drawRulers();
-    }
-
-    window.addEventListener('resize', updateCanvasSize);
-
-    updateCanvasSize();
+   
