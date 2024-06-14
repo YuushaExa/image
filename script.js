@@ -439,9 +439,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 feathering = parseFloat(featheringInput.value);
             });
 
-            canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('mousedown', handleMouseDown);
-            canvas.addEventListener('mouseup', handleMouseUp);
+     canvas.on('mouse:move', function(event) {
+    handleMouseMove(event.e);
+});
+
+canvas.on('mouse:down', function(event) {
+    handleMouseDown(event.e);
+});
+
+canvas.on('mouse:up', function(event) {
+    handleMouseUp(event.e);
+});
 
             function handleImageUpload(event) {
                 const file = event.target.files[0];
