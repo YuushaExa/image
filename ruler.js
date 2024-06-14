@@ -1,5 +1,35 @@
+  const uploadInput = document.getElementById('upload');
+    const dropArea = document.getElementById('drop-area');
+    const imageUrlInput = document.getElementById('image-url');
+    const loadUrlButton = document.getElementById('load-url');
+    const cropButton = document.getElementById('crop-btn');
     const canvasElement = document.getElementById('canvas');
+    const canvas = new fabric.Canvas('canvas');
+    const imageWidthInput = document.getElementById('image-width');
+    const imageHeightInput = document.getElementById('image-height');
+    const canvasWidthInput = document.getElementById('canvas-width');
+    const canvasHeightInput = document.getElementById('canvas-height');
+    const objectInfo = document.getElementById('objectInfo');
 
+        const ctx = canvasElement.getContext('2d');
+
+    let imgInstance, imgData;
+   
+
+
+    let isCropping = false;
+    let cropRect;
+
+    uploadInput.addEventListener('change', handleFileSelect);
+    dropArea.addEventListener('dragover', handleDragOver);
+    dropArea.addEventListener('drop', handleDrop);
+    dropArea.addEventListener('click', () => uploadInput.click());
+    loadUrlButton.addEventListener('click', handleImageUrl);
+    cropButton.addEventListener('click', handleCrop);
+    canvasWidthInput.addEventListener('input', updateCanvasSize);
+    canvasHeightInput.addEventListener('input', updateCanvasSize);
+    imageWidthInput.addEventListener('input', updateImageSize);
+    imageHeightInput.addEventListener('input', updateImageSize);
 
 const horizontalRuler = document.getElementById('horizontal-ruler');
     const verticalRuler = document.getElementById('vertical-ruler');
