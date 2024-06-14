@@ -13,11 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const objectInfo = document.getElementById('objectInfo');
 
         const ctx = canvasElement.getContext('2d');
-    const healButton = document.getElementById('healButton');
-    const confirmHealButton = document.getElementById('confirm-heal-btn');
+
     let imgInstance, imgData;
-    let healingMode = false;
-    let healRect;
+   
 
 
     let isCropping = false;
@@ -376,161 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // healing
 
-    healButton.addEventListener('click', function() {
-        healingMode = !healingMode;
-        canvas.isDrawingMode = false; // Ensure Fabric.js drawing mode is off
-        healButton.textContent = healingMode ? 'Cancel Healing' : 'Spot Healing Brush';
 
-        if (!healingMode && brushStrokes.length > 0) {
-            applyHealing();
-        }
-    });
-
-    // Custom Brush for Capturing Strokes
-    const brush = new fabric.CircleBrush(canvas);
-    brush.width = 10;
-    canvas.freeDrawingBrush = brush;
-
-    // Capture Brush Strokes
-    canvas.on('mouse:down', function(o) {
-        if (healingMode) {
-            canvas.isDrawingMode = true;
-        }
-    });
-
-    canvas.on('path:created', function(event) {
-        if (healingMode) {
-            const path = event.path;
-            if (path && path.path) {
-                const points = path.path;
-                points.forEach(point => {
-                    const [cmd, x, y] = point;
-                    if (cmd && x && y) {
-                        brushStrokes.push({ x, y });
-                    }
-                });
-                canvas.remove(path); // Remove the temporary drawing
-            }
-            canvas.isDrawingMode = false;
-        }
-    });
-
-    // Apply Healing using OpenCV.js
-    healButton.addEventListener('click', function() {
-        healingMode = !healingMode;
-        canvas.isDrawingMode = false;
-        healButton.textContent = healingMode ? 'Cancel Healing' : 'Spot Healing Brush';
-        confirmHealButton.style.display = healingMode ? 'block' : 'none';
-
-        if (healingMode) {
-            startHealingSelection();
-        } else {
-            cancelHealingSelection();
-        }
-    });
-
-    function startHealingSelection() {
-        if (!imgInstance) return;
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const healWidth = canvas.width / 4;
-        const healHeight = canvas.height / 4;
-
-        healRect = new fabric.Rect({
-            left: centerX - healWidth / 2,
-            top: centerY - healHeight / 2,
-            width: healWidth,
-            height: healHeight,
-            fill: 'rgba(0,0,0,0.3)',
-            selectable: true
-        });
-        canvas.add(healRect);
-    }
-
-    function cancelHealingSelection() {
-        if (healRect) {
-            canvas.remove(healRect);
-            healRect = null;
-        }
-    }
-
-    confirmHealButton.addEventListener('click', function() {
-        if (!healRect) return;
-
-        const healData = healRect.getBoundingRect();
-
-        const scaleX = imgInstance.scaleX || 1;
-        const scaleY = imgInstance.scaleY || 1;
-
-        const left = (healData.left - imgInstance.left) / scaleX;
-        const top = (healData.top - imgInstance.top) / scaleY;
-        const width = healData.width / scaleX;
-        const height = healData.height / scaleY;
-
-        const croppedImg = new Image();
-        croppedImg.src = imgInstance.toDataURL({
-            left: left,
-            top: top,
-            width: width,
-            height: height
-        });
-
-        croppedImg.onload = function() {
-            const croppedInstance = new fabric.Image(croppedImg, {
-                left: imgInstance.left,
-                top: imgInstance.top,
-                scaleX: imgInstance.scaleX,
-                scaleY: imgInstance.scaleY
-            });
-            canvas.clear();
-            canvas.add(croppedInstance);
-            canvas.centerObject(croppedInstance);
-            canvas.renderAll();
-            imgInstance = croppedInstance;
-
-            applyHealing(left, top, width, height);
-        };
-
-        healingMode = false;
-        healButton.textContent = 'Spot Healing Brush';
-        confirmHealButton.style.display = 'none';
-        canvas.remove(healRect);
-        healRect = null;
-    });
-
-    // Apply Healing using OpenCV.js
-    function applyHealing(left, top, width, height) {
-        const canvasWidth = canvas.getWidth();
-        const canvasHeight = canvas.getHeight();
-        imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-
-        cv.onRuntimeInitialized = () => {
-            const src = cv.matFromImageData(imgData);
-            const dst = new cv.Mat();
-            const mask = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
-
-            const x = Math.round(left);
-            const y = Math.round(top);
-            const w = Math.round(width);
-            const h = Math.round(height);
-
-            cv.rectangle(mask, new cv.Point(x, y), new cv.Point(x + w, y + h), new cv.Scalar(255, 255, 255), -1);
-
-            cv.inpaint(src, mask, dst, 3, cv.INPAINT_TELEA);
-
-            let resultImageData = new ImageData(
-                new Uint8ClampedArray(dst.data),
-                dst.cols,
-                dst.rows
-            );
-            ctx.putImageData(resultImageData, 0, 0);
-
-            src.delete();
-            dst.delete();
-            mask.delete();
-        };
-    }
+   
 
 
 });
