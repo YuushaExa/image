@@ -12,7 +12,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasHeightInput = document.getElementById('canvas-height');
     const objectInfo = document.getElementById('objectInfo');
 
-        const ctx = canvasElement.getContext('2d');
+    const horizontalRuler = document.getElementById('horizontal-ruler');
+    const verticalRuler = document.getElementById('vertical-ruler');
+
+
+    const ctx = canvasElement.getContext('2d');
 
     let imgInstance, imgData;
    
