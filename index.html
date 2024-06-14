@@ -62,8 +62,27 @@
             
              <div id="objectInfo">Select an object to see its size</div>
 
-  <button id="healButton">Spot Healing Brush</button>
-            <button id="confirm-heal-btn" style="display: none;">Confirm Healing</button>
+  <div id="healButton">
+      <button id="healToolButton">Healing Spot Tool</button>
+    <label for="cursorType">Cursor Type:</label>
+    <select id="cursorType">
+        <option value="basic">Basic Cursor</option>
+        <option value="continuous">Continuous Selection</option>
+    </select>
+    <label for="cursorSize">Cursor Size:</label>
+    <input type="range" id="cursorSize" min="5" max="100" value="20">
+    <label for="blendingIntensity">Blending Intensity:</label>
+    <input type="range" id="blendingIntensity" min="0.1" max="2" step="0.1" value="1">
+    <label for="searchRadius">Search Radius:</label>
+    <input type="range" id="searchRadius" min="10" max="100" value="30">
+    <label for="affectedArea">Affected Area:</label>
+    <input type="range" id="affectedArea" min="0.1" max="1" step="0.1" value="0.5">
+    <label for="feathering">Feathering:</label>
+    <input type="range" id="feathering" min="0" max="1" step="0.1" value="0.5">
+    <canvas id="canvas"></canvas>
+    <div id="cursor" class="cursor"></div>
+  </div>
+
         </div>
 
         <div class="main-content">
@@ -74,7 +93,6 @@
             <canvas id="canvas"></canvas>
         </div>
     </div>
-    <script src="https://docs.opencv.org/4.x/opencv.js"></script>
 
     <script src="script.js"></script>
 </body>
