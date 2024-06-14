@@ -1,4 +1,7 @@
-    const horizontalRuler = document.getElementById('horizontal-ruler');
+    const canvasElement = document.getElementById('canvas');
+
+
+const horizontalRuler = document.getElementById('horizontal-ruler');
     const verticalRuler = document.getElementById('vertical-ruler');
 
     function drawRulers() {
