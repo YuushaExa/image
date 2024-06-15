@@ -378,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // healing
 
-    const uploadInput = document.getElementById('upload');
     const healToolButton = document.getElementById('healToolButton');
     const cursorTypeInput = document.getElementById('cursorType');
     const cursorSizeInput = document.getElementById('cursorSize');
@@ -389,7 +388,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasElement = document.getElementById('canvas');
     const cursor = document.getElementById('cursor');
     
-    const canvas = new fabric.Canvas('canvas');
     
     let usingHealTool = false;
     let cursorSize = parseInt(cursorSizeInput.value, 10);
