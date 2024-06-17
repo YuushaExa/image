@@ -400,48 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
 
-    uploadInput.addEventListener('change', handleImageUpload);
-    healToolButton.addEventListener('click', () => {
-        usingHealTool = !usingHealTool;
-        cursor.style.display = usingHealTool ? 'block' : 'none';
-        if (usingHealTool) {
-            cursor.style.width = cursor.style.height = `${cursorSize}px`; // Ensure cursor size is updated when tool is activated
-        }
-    });
-
-    cursorTypeInput.addEventListener('change', () => {
-        cursorType = cursorTypeInput.value;
-        if (cursorType === 'basic') {
-            cursor.style.display = usingHealTool ? 'block' : 'none';
-        }
-    });
-
-    cursorSizeInput.addEventListener('input', () => {
-        cursorSize = parseInt(cursorSizeInput.value, 10);
-        cursor.style.width = cursor.style.height = `${cursorSize}px`;
-    });
-
-    blendingIntensityInput.addEventListener('input', () => {
-        blendingIntensity = parseFloat(blendingIntensityInput.value);
-    });
-
-    searchRadiusInput.addEventListener('input', () => {
-        searchRadius = parseInt(searchRadiusInput.value, 10);
-    });
-
-    affectedAreaInput.addEventListener('input', () => {
-        affectedArea = parseFloat(affectedAreaInput.value);
-    });
-
-    featheringInput.addEventListener('input', () => {
-        feathering = parseFloat(featheringInput.value);
-    });
-
-    canvas.on('mouse:move', handleMouseMove);
-    canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:up', handleMouseUp);
-
-    function handleImageUpload(event) {
+        function handleImageUpload(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -458,6 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     canvas.add(img);
                     canvas.renderAll();
                     canvasData = canvas.contextContainer.getImageData(0, 0, canvas.width, canvas.height);
+                    imgInstance = img;
                 });
             };
             reader.readAsDataURL(file);
@@ -496,6 +456,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function inpaintSpot(x, y) {
+        if (!imgInstance) return;
+
         const radius = cursorSize / 2;
         const imageData = canvas.contextContainer.getImageData(x - radius, y - radius, radius * 2, radius * 2);
         const data = imageData.data;
@@ -599,5 +561,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 sourceData[sourceIndex + 2] = weight * targetData[targetIndex + 2] + (1 - weight) * sourceData[sourceIndex + 2];
             }
         }
-    } 
+    }
         });
