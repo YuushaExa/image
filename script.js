@@ -13,35 +13,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const objectInfo = document.getElementById('objectInfo');
     const horizontalRuler = document.getElementById('horizontal-ruler');
     const verticalRuler = document.getElementById('vertical-ruler');
-    const healToolButton = document.getElementById('healToolButton');
-    const cursorTypeInput = document.getElementById('cursorType');
-    const cursorSizeInput = document.getElementById('cursorSize');
-    const blendingIntensityInput = document.getElementById('blendingIntensity');
-    const searchRadiusInput = document.getElementById('searchRadius');
-    const affectedAreaInput = document.getElementById('affectedArea');
-    const featheringInput = document.getElementById('feathering');
-    const cursor = document.getElementById('cursor');
-
-    let imgInstance, isCropping = false, cropRect;
-    let usingHealTool = false, isMouseDown = false, cursorSize = parseInt(cursorSizeInput.value, 10);
-    let blendingIntensity = parseFloat(blendingIntensityInput.value);
-    let searchRadius = parseInt(searchRadiusInput.value, 10);
-    let affectedArea = parseFloat(affectedAreaInput.value);
-    let feathering = parseFloat(featheringInput.value);
-    let canvasData = null, cursorType = cursorTypeInput.value;
-    let tempCanvas, tempCtx;
-
-    cursor.style.width = cursor.style.height = `${cursorSize}px`;
-
-    const controls = ['brightness', 'contrast', 'saturation'];
-    controls.forEach(control => {
-        const input = document.getElementById(control);
-        input.addEventListener('input', () => {
-            applyFilters();
-            updateLabel(control);
-        });
-    });
-
+    const ctx = canvasElement.getContext('2d');
+    let imgInstance, imgData;
+   
+    let isCropping = false;
+    let cropRect;
     uploadInput.addEventListener('change', handleFileSelect);
     dropArea.addEventListener('dragover', handleDragOver);
     dropArea.addEventListener('drop', handleDrop);
@@ -52,20 +28,14 @@ document.addEventListener('DOMContentLoaded', function() {
     canvasHeightInput.addEventListener('input', updateCanvasSize);
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
-    healToolButton.addEventListener('click', toggleHealTool);
-    window.addEventListener('resize', updateCanvasSize);
-
-    canvas.on('selection:created', updateObjectInfo);
-    canvas.on('selection:updated', updateObjectInfo);
-    canvas.on('selection:cleared', clearObjectInfo);
-    canvas.on('object:modified', updateObjectInfo);
-    canvas.on('object:scaling', updateObjectInfo);
-    canvas.on('object:moving', updateObjectInfo);
-    canvas.on('object:rotating', updateObjectInfo);
-    canvas.on('mouse:move', handleMouseMove);
-    canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:up', handleMouseUp);
-
+    const controls = ['brightness', 'contrast', 'saturation'];
+    controls.forEach(control => {
+        const input = document.getElementById(control);
+        input.addEventListener('input', () => {
+            applyFilters();
+            updateLabel(control);
+        });
+    });
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
@@ -76,13 +46,11 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         }
     }
-
     function handleDragOver(event) {
         event.preventDefault();
         event.stopPropagation();
         dropArea.classList.add('dragover');
     }
-
     function handleDrop(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -96,14 +64,12 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         }
     }
-
     function handleImageUrl() {
         const url = imageUrlInput.value;
         if (url) {
             loadImage(url);
         }
     }
-
     function loadImage(src) {
         fabric.Image.fromURL(src, function(oImg) {
             canvas.clear();
@@ -117,43 +83,34 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCanvasSizeInputs();
         });
     }
-
     function applyFilters() {
         if (!imgInstance) return;
-
         const brightness = parseInt(document.getElementById('brightness').value, 10);
         const contrast = parseInt(document.getElementById('contrast').value, 10);
         const saturation = parseInt(document.getElementById('saturation').value, 10);
-
         imgInstance.filters = [];
-
         if (brightness !== 0) {
             imgInstance.filters.push(new fabric.Image.filters.Brightness({
                 brightness: brightness / 100
             }));
         }
-
         if (contrast !== 0) {
             imgInstance.filters.push(new fabric.Image.filters.Contrast({
                 contrast: contrast / 100
             }));
         }
-
         if (saturation !== 0) {
             imgInstance.filters.push(new fabric.Image.filters.Saturation({
                 saturation: saturation / 100
             }));
         }
-
         imgInstance.applyFilters();
         canvas.renderAll();
     }
-
     function updateLabel(control) {
         const value = document.getElementById(control).value;
         document.getElementById(`${control}-label`).textContent = `${value}%`;
     }
-
     function updateCanvasSize() {
         const width = parseInt(canvasWidthInput.value, 10);
         const height = parseInt(canvasHeightInput.value, 10);
@@ -161,10 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.setWidth(width);
             canvas.setHeight(height);
             canvas.renderAll();
-            drawRulers();
         }
     }
-
     function updateImageSize() {
         const width = parseInt(imageWidthInput.value, 10);
         const height = parseInt(imageHeightInput.value, 10);
@@ -176,28 +131,24 @@ document.addEventListener('DOMContentLoaded', function() {
             canvas.renderAll();
         }
     }
-
     function updateImageSizeInputs() {
         if (imgInstance) {
             imageWidthInput.value = Math.round(imgInstance.getScaledWidth());
             imageHeightInput.value = Math.round(imgInstance.getScaledHeight());
         }
     }
-
     function updateCanvasSizeInputs() {
         canvasWidthInput.value = canvas.getWidth();
         canvasHeightInput.value = canvas.getHeight();
     }
-
+    //crop
     function handleCrop() {
         if (!imgInstance) return;
-
         if (!isCropping) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const cropWidth = canvas.width / 2;
             const cropHeight = canvas.height / 2;
-
             cropRect = new fabric.Rect({
                 left: centerX - cropWidth / 2,
                 top: centerY - cropHeight / 2,
@@ -211,15 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
             cropButton.textContent = 'Confirm Crop';
         } else {
             const cropData = cropRect.getBoundingRect();
-
             const scaleX = imgInstance.scaleX || 1;
             const scaleY = imgInstance.scaleY || 1;
-
             const left = (cropData.left - imgInstance.left) / scaleX;
             const top = (cropData.top - imgInstance.top) / scaleY;
             const width = cropData.width / scaleX;
             const height = cropData.height / scaleY;
-
             const croppedImg = new Image();
             croppedImg.src = imgInstance.toDataURL({
                 left: left,
@@ -227,7 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 width: width,
                 height: height
             });
-
             croppedImg.onload = function() {
                 const croppedInstance = new fabric.Image(croppedImg, {
                     left: imgInstance.left,
@@ -242,36 +189,80 @@ document.addEventListener('DOMContentLoaded', function() {
                 imgInstance = croppedInstance;
                 updateImageSizeInputs();
             };
-
             isCropping = false;
             cropButton.textContent = 'Crop';
             canvas.remove(cropRect);
         }
     }
-
-    function updateObjectInfo(event) {
-        const object = event.target;
-        if (object) {
+    // obj info
+    
+      function updateObjectInfo(object) {
+        if (toggleInfo.checked) {
             const width = object.getScaledWidth();
             const height = object.getScaledHeight();
             const angle = object.angle;
             const left = object.left;
             const top = object.top;
             objectInfo.innerHTML = `Width: ${width.toFixed(2)} px, Height: ${height.toFixed(2)} px, Angle: ${angle.toFixed(2)}°, Position: (${left.toFixed(2)}, ${top.toFixed(2)})`;
+            angleInput.value = angle.toFixed(2);
         } else {
-            objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
+            objectInfo.innerHTML = '';
         }
     }
-
-    function clearObjectInfo() {
+    // Listen for object selection
+    canvas.on('selection:created', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+    // Listen for object selection updates
+    canvas.on('selection:updated', function(e) {
+        const selectedObject = e.selected[0];
+        updateObjectInfo(selectedObject);
+    });
+    // Clear information display when object is deselected
+    canvas.on('selection:cleared', function() {
         objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
-    }
-
-    function drawRulers() {
+    });
+    // Listen for object modifications
+    canvas.on('object:modified', function(e) {
+        const modifiedObject = e.target;
+        updateObjectInfo(modifiedObject);
+    });
+    // Listen for object transformations
+    canvas.on('object:scaling', function(e) {
+        const scalingObject = e.target;
+        updateObjectInfo(scalingObject);
+    });
+    canvas.on('object:moving', function(e) {
+        const movingObject = e.target;
+        updateObjectInfo(movingObject);
+    });
+    canvas.on('object:rotating', function(e) {
+        const rotatingObject = e.target;
+        updateObjectInfo(rotatingObject);
+    });
+  angleInput.addEventListener('input', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && angleInput.value !== '') {
+            activeObject.set('angle', parseFloat(angleInput.value)).setCoords();
+            canvas.renderAll();
+            updateObjectInfo(activeObject);
+        }
+    });
+    // Toggle info display
+    toggleInfo.addEventListener('change', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            updateObjectInfo(activeObject);
+        } else {
+            objectInfo.innerHTML = 'Select an object to see its size, angle, and position';
+        }   
+    });
+// ruler
+         function drawRulers() {
         drawHorizontalRuler();
         drawVerticalRuler();
     }
-
     function drawHorizontalRuler() {
         horizontalRuler.innerHTML = '';
         const canvasWidth = canvas.getWidth();
@@ -283,7 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
             marker.style.height = i % 50 === 0 ? '15px' : '10px';
             marker.style.background = 'black';
             horizontalRuler.appendChild(marker);
-
             if (i % 50 === 0) {
                 const number = document.createElement('span');
                 number.style.position = 'absolute';
@@ -295,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
     function drawVerticalRuler() {
         verticalRuler.innerHTML = '';
         const canvasHeight = canvas.getHeight();
@@ -307,7 +296,6 @@ document.addEventListener('DOMContentLoaded', function() {
             marker.style.height = '1px';
             marker.style.background = 'black';
             verticalRuler.appendChild(marker);
-
             if (i % 50 === 0) {
                 const number = document.createElement('span');
                 number.style.position = 'absolute';
@@ -319,7 +307,107 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+ function updateCanvasSize() {
+        const canvasElement = canvas.getElement();
+        const width = window.innerWidth - 100; // Adjust for ruler size
+        const height = window.innerHeight - 100; // Adjust for ruler size
+        canvasElement.width = width;
+        canvasElement.height = height;
+        canvas.setWidth(width);
+        canvas.setHeight(height);
+        drawRulers();
+    }
+    window.addEventListener('resize', updateCanvasSize);
+    updateCanvasSize();
+    
+// healing
+    const healToolButton = document.getElementById('healToolButton');
+    const cursorTypeInput = document.getElementById('cursorType');
+    const cursorSizeInput = document.getElementById('cursorSize');
+    const blendingIntensityInput = document.getElementById('blendingIntensity');
+    const searchRadiusInput = document.getElementById('searchRadius');
+    const affectedAreaInput = document.getElementById('affectedArea');
+    const featheringInput = document.getElementById('feathering');
+    const cursor = document.getElementById('cursor');
 
+
+
+    
+          
+            
+    
+
+          
+          Expand Down
+    
+    
+  
+    let usingHealTool = false;
+    let cursorSize = parseInt(cursorSizeInput.value, 10);
+    let blendingIntensity = parseFloat(blendingIntensityInput.value);
+    let searchRadius = parseInt(searchRadiusInput.value, 10);
+    let affectedArea = parseFloat(affectedAreaInput.value);
+    let feathering = parseFloat(featheringInput.value);
+    let isMouseDown = false;
+    let canvasData = null;
+    let cursorType = cursorTypeInput.value;
+    cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
+    uploadInput.addEventListener('change', handleImageUpload);
+    healToolButton.addEventListener('click', () => {
+        usingHealTool = !usingHealTool;
+        cursor.style.display = usingHealTool ? 'block' : 'none';
+        if (usingHealTool) {
+            cursor.style.width = cursor.style.height = `${cursorSize}px`; // Ensure cursor size is updated when tool is activated
+        }
+    });
+    cursorTypeInput.addEventListener('change', () => {
+        cursorType = cursorTypeInput.value;
+        if (cursorType === 'basic') {
+            cursor.style.display = usingHealTool ? 'block' : 'none';
+        }
+    });
+    cursorSizeInput.addEventListener('input', () => {
+        cursorSize = parseInt(cursorSizeInput.value, 10);
+        cursor.style.width = cursor.style.height = `${cursorSize}px`;
+    });
+    blendingIntensityInput.addEventListener('input', () => {
+        blendingIntensity = parseFloat(blendingIntensityInput.value);
+    });
+    searchRadiusInput.addEventListener('input', () => {
+        searchRadius = parseInt(searchRadiusInput.value, 10);
+    });
+    affectedAreaInput.addEventListener('input', () => {
+        affectedArea = parseFloat(affectedAreaInput.value);
+    });
+    featheringInput.addEventListener('input', () => {
+        feathering = parseFloat(featheringInput.value);
+    });
+    canvas.on('mouse:move', handleMouseMove);
+    canvas.on('mouse:down', handleMouseDown);
+    canvas.on('mouse:up', handleMouseUp);
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fabric.Image.fromURL(e.target.result, function(img) {
+                    canvas.clear();
+                    img.set({
+                        left: 0,
+                        top: 0,
+                        selectable: false
+                    });
+                    canvas.setWidth(img.width);
+                    canvas.setHeight(img.height);
+                    canvas.add(img);
+                    canvas.renderAll();
+                    canvasData = canvas.contextContainer.getImageData(0, 0, canvas.width, canvas.height);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
     function handleMouseMove(options) {
         if (usingHealTool) {
             const pointer = canvas.getPointer(options.e);
@@ -332,80 +420,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
     function handleMouseDown(options) {
         if (usingHealTool) {
             isMouseDown = true;
             const pointer = canvas.getPointer(options.e);
             const x = pointer.x;
             const y = pointer.y;
-            inpaintSpot(x, y);
+            if (cursorType === 'basic') {
+                inpaintSpot(x, y);
+            }
         }
     }
-
     function handleMouseUp() {
         if (usingHealTool) {
             isMouseDown = false;
         }
     }
-
-    function toggleHealTool() {
-        usingHealTool = !usingHealTool;
-        if (usingHealTool) {
-            createTemporaryCanvas();
-            healToolButton.textContent = 'Confirm Heal';
-        } else {
-            mergeTemporaryCanvas();
-            healToolButton.textContent = 'Enable Heal Tool';
-        }
-    }
-
-    function createTemporaryCanvas() {
-        tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.getWidth();
-        tempCanvas.height = canvas.getHeight();
-        tempCanvas.style.position = 'absolute';
-        tempCanvas.style.left = canvas.getElement().offsetLeft + 'px';
-        tempCanvas.style.top = canvas.getElement().offsetTop + 'px';
-        tempCanvas.style.zIndex = 1000;
-        document.body.appendChild(tempCanvas);
-        tempCtx = tempCanvas.getContext('2d');
-        tempCtx.drawImage(canvas.getElement(), 0, 0);
-    }
-
-    function mergeTemporaryCanvas() {
-        canvas.contextContainer.drawImage(tempCanvas, 0, 0);
-        document.body.removeChild(tempCanvas);
-        tempCanvas = null;
-        tempCtx = null;
-        canvas.renderAll();
-    }
-
     function inpaintSpot(x, y) {
-        if (!imgInstance) return;
-
         const radius = cursorSize / 2;
-        const imageData = tempCtx.getImageData(x - radius, y - radius, radius * 2, radius * 2);
+        const imageData = canvas.contextContainer.getImageData(x - radius, y - radius, radius * 2, radius * 2);
         const data = imageData.data;
-
         const patchSize = radius * 2;
         const similarPatch = findBestPatch(x, y, patchSize);
         if (similarPatch) {
             advancedBlendPatches(data, similarPatch.data, radius, blendingIntensity, affectedArea);
-            tempCtx.putImageData(imageData, x - radius, y - radius);
+            canvas.contextContainer.putImageData(imageData, x - radius, y - radius);
+            canvas.renderAll();
         }
     }
-
     function findBestPatch(x, y, size) {
         let bestPatch = null;
         let bestScore = Infinity;
-
         for (let dx = -searchRadius; dx <= searchRadius; dx++) {
             for (let dy = -searchRadius; dy <= searchRadius; dy++) {
                 if (x + dx < 0 || y + dy < 0 || x + dx + size >= canvas.width || y + dy + size >= canvas.height) {
                     continue;
                 }
-
                 const patchData = extractPatchData(x + dx, y + dy, size);
                 const score = computePatchScore(patchData);
                 if (score < bestScore) {
@@ -414,18 +464,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-
         return bestPatch;
     }
-
     function extractPatchData(x, y, size) {
         const startX = Math.max(0, x);
         const startY = Math.max(0, y);
-        const endX = Math.min(tempCanvas.width, x + size);
-        const endY = Math.min(tempCanvas.height, y + size);
-        return tempCtx.getImageData(startX, startY, endX - startX, endY - startY).data;
+        const endX = Math.min(canvas.width, x + size);
+        const endY = Math.min(canvas.height, y + size);
+        return canvas.contextContainer.getImageData(startX, startY, endX - startX, endY - startY).data;
     }
-
     function computePatchScore(data) {
         let r = 0, g = 0, b = 0, count = data.length / 4;
         for (let i = 0; i < data.length; i += 4) {
@@ -436,26 +483,21 @@ document.addEventListener('DOMContentLoaded', function() {
         r /= count;
         g /= count;
         b /= count;
-
         let score = 0;
         for (let i = 0; i < data.length; i += 4) {
             score += Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
         }
-
         return score;
     }
-
     function advancedBlendPatches(sourceData, targetData, radius, intensity, affectedArea) {
         const length = sourceData.length;
         const sigma = radius / 3;
         const gauss = (d) => Math.exp(-(d * d) / (2 * sigma * sigma));
         const affectRadius = radius * affectedArea;
-
         for (let i = 0; i < length; i += 4) {
             const dx = (i / 4) % (radius * 2) - radius;
             const dy = Math.floor((i / 4) / (radius * 2)) - radius;
             const dist = Math.sqrt(dx * dx + dy * dy);
-
             if (dist < affectRadius) {
                 const weight = gauss(dist) * intensity;
                 sourceData[i] = weight * targetData[i] + (1 - weight) * sourceData[i];
@@ -464,6 +506,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
-    updateCanvasSize();
-});
+    function contentAwareFill(sourceData, targetData, radius, intensity) {
+        const length = sourceData.length;
+        const size = Math.sqrt(length / 4);
+        for (let i = 0; i < length; i += 4) {
+            const dx = (i / 4) % (radius * 2) - radius;
+            const dy = Math.floor((i / 4) / (radius * 2)) - radius;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < radius) {
+                const index = (dy + radius) * (radius * 2) + (dx + radius);
+                const sourceIndex = 4 * index;
+                const targetIndex = 4 * index;
+                const weight = Math.exp(-dist * dist / (2 * radius * radius)) * intensity;
+                sourceData[sourceIndex] = weight * targetData[targetIndex] + (1 - weight) * sourceData[sourceIndex];
+                sourceData[sourceIndex + 1] = weight * targetData[targetIndex + 1] + (1 - weight) * sourceData[sourceIndex + 1];
+                sourceData[sourceIndex + 2] = weight * targetData[targetIndex + 2] + (1 - weight) * sourceData[sourceIndex + 2];
+            }
+        }
+    } 
+        });
