@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const objectInfo = document.getElementById('objectInfo');
     const horizontalRuler = document.getElementById('horizontal-ruler');
     const verticalRuler = document.getElementById('vertical-ruler');
-    const ctx = canvasElement.getContext('2d');
     const healToolButton = document.getElementById('healToolButton');
     const cursorTypeInput = document.getElementById('cursorType');
     const cursorSizeInput = document.getElementById('cursorSize');
@@ -30,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let affectedArea = parseFloat(affectedAreaInput.value);
     let feathering = parseFloat(featheringInput.value);
     let canvasData = null, cursorType = cursorTypeInput.value;
+    let tempCanvas, tempCtx;
 
     cursor.style.width = cursor.style.height = `${cursorSize}px`;
 
@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
     canvasHeightInput.addEventListener('input', updateCanvasSize);
     imageWidthInput.addEventListener('input', updateImageSize);
     imageHeightInput.addEventListener('input', updateImageSize);
+    healToolButton.addEventListener('click', toggleHealTool);
     window.addEventListener('resize', updateCanvasSize);
 
     canvas.on('selection:created', updateObjectInfo);
@@ -64,8 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('mouse:move', handleMouseMove);
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:up', handleMouseUp);
-
-    healToolButton.addEventListener('click', toggleHealTool);
 
     function handleFileSelect(event) {
         const file = event.target.files[0];
@@ -353,27 +352,47 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleHealTool() {
         usingHealTool = !usingHealTool;
         if (usingHealTool) {
-            canvas.isDrawingMode = true;
-            healToolButton.textContent = 'Disable Heal Tool';
+            createTemporaryCanvas();
+            healToolButton.textContent = 'Confirm Heal';
         } else {
-            canvas.isDrawingMode = false;
+            mergeTemporaryCanvas();
             healToolButton.textContent = 'Enable Heal Tool';
         }
+    }
+
+    function createTemporaryCanvas() {
+        tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.getWidth();
+        tempCanvas.height = canvas.getHeight();
+        tempCanvas.style.position = 'absolute';
+        tempCanvas.style.left = canvas.getElement().offsetLeft + 'px';
+        tempCanvas.style.top = canvas.getElement().offsetTop + 'px';
+        tempCanvas.style.zIndex = 1000;
+        document.body.appendChild(tempCanvas);
+        tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(canvas.getElement(), 0, 0);
+    }
+
+    function mergeTemporaryCanvas() {
+        canvas.contextContainer.drawImage(tempCanvas, 0, 0);
+        document.body.removeChild(tempCanvas);
+        tempCanvas = null;
+        tempCtx = null;
+        canvas.renderAll();
     }
 
     function inpaintSpot(x, y) {
         if (!imgInstance) return;
 
         const radius = cursorSize / 2;
-        const imageData = canvas.contextContainer.getImageData(x - radius, y - radius, radius * 2, radius * 2);
+        const imageData = tempCtx.getImageData(x - radius, y - radius, radius * 2, radius * 2);
         const data = imageData.data;
 
         const patchSize = radius * 2;
         const similarPatch = findBestPatch(x, y, patchSize);
         if (similarPatch) {
             advancedBlendPatches(data, similarPatch.data, radius, blendingIntensity, affectedArea);
-            canvas.contextContainer.putImageData(imageData, x - radius, y - radius);
-            canvas.renderAll();
+            tempCtx.putImageData(imageData, x - radius, y - radius);
         }
     }
 
@@ -402,9 +421,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function extractPatchData(x, y, size) {
         const startX = Math.max(0, x);
         const startY = Math.max(0, y);
-        const endX = Math.min(canvas.width, x + size);
-        const endY = Math.min(canvas.height, y + size);
-        return canvas.contextContainer.getImageData(startX, startY, endX - startX, endY - startY).data;
+        const endX = Math.min(tempCanvas.width, x + size);
+        const endY = Math.min(tempCanvas.height, y + size);
+        return tempCtx.getImageData(startX, startY, endX - startX, endY - startY).data;
     }
 
     function computePatchScore(data) {
