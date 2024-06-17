@@ -385,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchRadiusInput = document.getElementById('searchRadius');
     const affectedAreaInput = document.getElementById('affectedArea');
     const featheringInput = document.getElementById('feathering');
-    const canvasElement = document.getElementById('canvas');
     const cursor = document.getElementById('cursor');
     
     
