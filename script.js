@@ -65,6 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:up', handleMouseUp);
 
+    healToolButton.addEventListener('click', toggleHealTool);
+
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
@@ -338,15 +340,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const pointer = canvas.getPointer(options.e);
             const x = pointer.x;
             const y = pointer.y;
-            if (cursorType === 'basic') {
-                inpaintSpot(x, y);
-            }
+            inpaintSpot(x, y);
         }
     }
 
     function handleMouseUp() {
         if (usingHealTool) {
             isMouseDown = false;
+        }
+    }
+
+    function toggleHealTool() {
+        usingHealTool = !usingHealTool;
+        if (usingHealTool) {
+            canvas.isDrawingMode = true;
+            healToolButton.textContent = 'Disable Heal Tool';
+        } else {
+            canvas.isDrawingMode = false;
+            healToolButton.textContent = 'Enable Heal Tool';
         }
     }
 
