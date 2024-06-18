@@ -341,7 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let canvasData = null;
     let cursorType = cursorTypeInput.value;
     cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
-    uploadInput.addEventListener('change', handleImageUpload);
     healToolButton.addEventListener('click', () => {
         usingHealTool = !usingHealTool;
         cursor.style.display = usingHealTool ? 'block' : 'none';
@@ -374,28 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
     canvas.on('mouse:move', handleMouseMove);
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:up', handleMouseUp);
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                fabric.Image.fromURL(e.target.result, function(img) {
-                    canvas.clear();
-                    img.set({
-                        left: 0,
-                        top: 0,
-                        selectable: false
-                    });
-                    canvas.setWidth(img.width);
-                    canvas.setHeight(img.height);
-                    canvas.add(img);
-                    canvas.renderAll();
-                    canvasData = canvas.contextContainer.getImageData(0, 0, canvas.width, canvas.height);
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+
     function handleMouseMove(options) {
         if (usingHealTool) {
             const pointer = canvas.getPointer(options.e);
