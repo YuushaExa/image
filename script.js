@@ -343,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
     healToolButton.addEventListener('click', () => {
         usingHealTool = !usingHealTool;
+        canvas.selection = false;
         cursor.style.display = usingHealTool ? 'block' : 'none';
         if (usingHealTool) {
             cursor.style.width = cursor.style.height = `${cursorSize}px`; // Ensure cursor size is updated when tool is activated
