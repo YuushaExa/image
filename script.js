@@ -38,11 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-const allObjects = fabricRef.current.getObjects();
 
-    allObjects.forEach((object) => {
-      object.selectable = false
-    });
     
     function handleFileSelect(event) {
         const file = event.target.files[0];
@@ -351,7 +347,7 @@ const allObjects = fabricRef.current.getObjects();
     cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
     healToolButton.addEventListener('click', () => {
         usingHealTool = !usingHealTool;
-        canvas.selection = false;
+element.lockMovementX = true; element.lockMovementY = true;
         cursor.style.display = usingHealTool ? 'block' : 'none';
         if (usingHealTool) {
             cursor.style.width = cursor.style.height = `${cursorSize}px`; // Ensure cursor size is updated when tool is activated
