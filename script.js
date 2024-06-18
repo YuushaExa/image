@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCanvasSize();
     
 // healing
-   const healToolButton = document.getElementById('healToolButton');
+const healToolButton = document.getElementById('healToolButton');
 const cursorTypeInput = document.getElementById('cursorType');
 const cursorSizeInput = document.getElementById('cursorSize');
 const blendingIntensityInput = document.getElementById('blendingIntensity');
@@ -334,6 +334,7 @@ const searchRadiusInput = document.getElementById('searchRadius');
 const affectedAreaInput = document.getElementById('affectedArea');
 const featheringInput = document.getElementById('feathering');
 const cursor = document.getElementById('cursor');
+const canvas = new fabric.Canvas('c'); // Assuming your canvas element has an id of 'c'
 
 let usingHealTool = false;
 let cursorSize = parseInt(cursorSizeInput.value, 10);
@@ -342,8 +343,8 @@ let searchRadius = parseInt(searchRadiusInput.value, 10);
 let affectedArea = parseFloat(affectedAreaInput.value);
 let feathering = parseFloat(featheringInput.value);
 let isMouseDown = false;
-let canvasData = null;
 let cursorType = cursorTypeInput.value;
+
 cursor.style.width = cursor.style.height = `${cursorSize}px`; // Set initial cursor size
 
 healToolButton.addEventListener('click', () => {
@@ -434,6 +435,8 @@ function inpaintSpot(x, y) {
         advancedBlendPatches(data, similarPatch.data, radius, blendingIntensity, affectedArea);
         canvas.contextContainer.putImageData(imageData, x - radius, y - radius);
         canvas.renderAll();
+    } else {
+        console.log('No similar patch found.');
     }
 }
 
@@ -461,10 +464,11 @@ function extractPatchData(x, y, size) {
     const startY = Math.max(0, y);
     const endX = Math.min(canvas.width, x + size);
     const endY = Math.min(canvas.height, y + size);
-    return canvas.contextContainer.getImageData(startX, startY, endX - startX, endY - startY).data;
+    return canvas.contextContainer.getImageData(startX, startY, endX - startX, endY - startY);
 }
 
-function computePatchScore(data) {
+function computePatchScore(imageData) {
+    const data = imageData.data;
     let r = 0, g = 0, b = 0, count = data.length / 4;
     for (let i = 0; i < data.length; i += 4) {
         r += data[i];
@@ -517,5 +521,6 @@ function contentAwareFill(sourceData, targetData, radius, intensity) {
         }
     }
 }
+
 
         });
