@@ -331,18 +331,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const featheringInput = document.getElementById('feathering');
     const cursor = document.getElementById('cursor');
 
-
-
-    
-          
-            
-    
-
-          
-          Expand Down
-    
-    
-  
     let usingHealTool = false;
     let cursorSize = parseInt(cursorSizeInput.value, 10);
     let blendingIntensity = parseFloat(blendingIntensityInput.value);
