@@ -433,7 +433,7 @@ function inpaintSpot(x, y) {
     if (similarPatch) {
         advancedBlendPatches(data, similarPatch.data, radius, blendingIntensity, affectedArea);
         canvas.contextContainer.putImageData(imageData, x - radius, y - radius);
-        canvas.renderAll();
+        canvas.renderAll(); // Render the canvas after updating the image data
     } else {
         console.log('No similar patch found.');
     }
@@ -520,6 +520,7 @@ function contentAwareFill(sourceData, targetData, radius, intensity) {
         }
     }
 }
+
 
 
         });
