@@ -334,7 +334,6 @@ const searchRadiusInput = document.getElementById('searchRadius');
 const affectedAreaInput = document.getElementById('affectedArea');
 const featheringInput = document.getElementById('feathering');
 const cursor = document.getElementById('cursor');
-const canvas = new fabric.Canvas('c'); // Assuming your canvas element has an id of 'c'
 
 let usingHealTool = false;
 let cursorSize = parseInt(cursorSizeInput.value, 10);
