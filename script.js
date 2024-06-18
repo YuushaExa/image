@@ -36,6 +36,14 @@ document.addEventListener('DOMContentLoaded', function() {
             updateLabel(control);
         });
     });
+
+
+const allObjects = fabricRef.current.getObjects();
+
+    allObjects.forEach((object) => {
+      object.selectable = false
+    });
+    
     function handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
